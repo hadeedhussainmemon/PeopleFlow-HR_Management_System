@@ -8,54 +8,32 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
+
+// CORS configuration - MUST be before other middleware
+// Allow FRONTEND_URL env to be a comma-separated list of URLs or a single URL.
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(s => s.trim().replace(/\/+$/, ''))
+  : ['http://localhost:5173'];
+
+console.log('[CORS] Allowed origins:', allowedOrigins);
+
+// Simple CORS setup - allow specified origins
+const corsOptions = {
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+
 // Security middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(helmet());
-
-// CORS configuration
-// Allow FRONTEND_URL env to be a comma-separated list of URLs or a single URL.
-// Normalize to origin (scheme + host) so comparisons with the request
-// `Origin` header succeed even if someone added a path like `/login`.
-const normalizeOrigin = (val) => {
-  try {
-    return new URL(val).origin;
-  } catch (e) {
-    // Fallback: strip trailing slashes and any path portion
-    return (val || '').replace(/\/+$/, '').replace(/^(https?:\/\/[^\/]+).*/i, '$1');
-  }
-};
-
-// Parse FRONTEND_URL - can be a single URL or comma-separated list
-const rawOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
-  : ['http://localhost:5173'];
-
-const allowedOrigins = rawOrigins.map(normalizeOrigin);
-
-console.debug('[CORS] normalized allowedOrigins:', allowedOrigins);
-
-// Lightweight debug logging for CORS to help diagnose deployments.
-// Logs will show incoming Origin and the allowedOrigins array.
-app.use(cors({
-  origin: function (origin, callback) {
-    try {
-      // origin will be undefined for same-origin or curl requests
-      console.debug('[CORS] incoming origin:', origin);
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        console.warn('[CORS] Rejected origin:', origin);
-        return callback(new Error('Not allowed by CORS'), false);
-      }
-      console.debug('[CORS] Allowed origin:', origin);
-      return callback(null, true);
-    } catch (e) {
-      console.error('[CORS] error checking origin', e);
-      return callback(new Error('CORS check failed'), false);
-    }
-  },
-  credentials: true,
-}));
 
 // Rate limiting for auth endpoints
 const authLimiter = rateLimit({
