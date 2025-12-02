@@ -24,6 +24,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.0.0",
     "swagger-ui-express": "^5.0.1"
+    ,
+    "serverless-http": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
