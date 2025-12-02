@@ -4,6 +4,7 @@ dotenv.config();
 const serverless = require('serverless-http');
 const mongoose = require('mongoose');
 const app = require('../app');
+const { getAllowedOrigins } = require('../utils/cors');
 
 let cachedDb = null;
 
@@ -26,8 +27,16 @@ const connectToDatabase = async () => {
 const handler = serverless(app);
 
 module.exports = async (req, res) => {
-  // Set CORS headers
-  res.setHeader('Access-Control-Allow-Origin', 'https://people-flow-by-hh.vercel.app');
+  const allowedOrigins = getAllowedOrigins();
+  const origin = req.headers.origin;
+  
+  // Set CORS headers dynamically based on request origin
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (allowedOrigins.length === 1) {
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigins[0]);
+  }
+  
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Cookie,X-Requested-With');

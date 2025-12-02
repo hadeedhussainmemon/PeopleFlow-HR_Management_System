@@ -6,14 +6,12 @@ const rateLimit = require('express-rate-limit');
 const swaggerUi = require('swagger-ui-express');
 const fs = require('fs');
 const path = require('path');
+const { getAllowedOrigins } = require('./utils/cors');
 
 const app = express();
 
 // CORS configuration - MUST be before other middleware
-// Allow FRONTEND_URL env to be a comma-separated list of URLs or a single URL.
-const allowedOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL.split(',').map(s => s.trim().replace(/\/+$/, ''))
-  : ['http://localhost:5173'];
+const allowedOrigins = getAllowedOrigins();
 
 console.log('[CORS] Allowed origins:', allowedOrigins);
 
