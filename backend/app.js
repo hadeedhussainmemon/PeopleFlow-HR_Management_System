@@ -14,17 +14,29 @@ app.use(cookieParser());
 app.use(helmet());
 
 // CORS configuration
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',') 
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',')
   : ['http://localhost:5173'];
 
+// Lightweight debug logging for CORS to help diagnose deployments.
+// Logs will show incoming Origin and the allowedOrigins array.
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('Not allowed by CORS'), false);
+    try {
+      // origin will be undefined for same-origin or curl requests
+      console.debug('[CORS] incoming origin:', origin);
+      console.debug('[CORS] allowedOrigins:', allowedOrigins);
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        console.warn('[CORS] Rejected origin:', origin);
+        return callback(new Error('Not allowed by CORS'), false);
+      }
+      console.debug('[CORS] Allowed origin:', origin);
+      return callback(null, true);
+    } catch (e) {
+      console.error('[CORS] error checking origin', e);
+      return callback(new Error('CORS check failed'), false);
     }
-    return callback(null, true);
   },
   credentials: true,
 }));
