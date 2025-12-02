@@ -37,11 +37,13 @@ const useAuthStore = create((set, get) => ({
       });
       authCheckController = null;
     } catch (error) {
-      // Don't update state if request was cancelled (component unmounted or new request started)
+      // If the request was cancelled, still end loading so the UI doesn't hang
       if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+        set({ _isCheckingAuth: false, isLoading: false });
+        authCheckController = null;
         return;
       }
-      
+
       console.debug('Auth check failed:', error.response?.status || error.message);
       set({ 
         user: null, 

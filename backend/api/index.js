@@ -7,58 +7,46 @@ if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
 }
 
-// Cache mongoose connection across lambda invocations
+// Ensure MONGO_URI is set
+if (!process.env.MONGO_URI) {
+  console.error('FATAL ERROR: MONGO_URI is not defined.');
+  // In a serverless environment, throwing an error is better than process.exit
+  throw new Error('MONGO_URI is not defined.');
+}
+
+let cachedDb = null;
+
 const connectToDatabase = async () => {
-  // Return existing connection if already connected
-  if (mongoose.connection.readyState === 1) {
-    return mongoose.connection;
+  if (cachedDb) {
+    // If a connection is cached, use it
+    return cachedDb;
   }
-  
-  if (global.__mongooseConnection && mongoose.connection.readyState === 2) {
-    // Connection in progress, wait for it
-    return global.__mongooseConnection;
-  }
-  
-  if (!process.env.MONGO_URI) {
-    console.error('MONGO_URI not set');
-    throw new Error('MONGO_URI not set');
-  }
-  
-  // Set a connection timeout
-  const connectionTimeout = setTimeout(() => {
-    console.error('MongoDB connection timeout after 10s');
-    global.__mongooseConnection = null;
-  }, 10000);
-  
+
+  // If no connection is cached, create a new one
   try {
-    global.__mongooseConnection = mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
+    const db = await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 10000, // 10-second timeout
     });
-    await global.__mongooseConnection;
-    clearTimeout(connectionTimeout);
-    console.log('MongoDB connected');
-    return global.__mongooseConnection;
-  } catch (e) {
-    clearTimeout(connectionTimeout);
-    global.__mongooseConnection = null;
-    console.error('MongoDB connection failed:', e.message);
-    throw e;
+    cachedDb = db;
+    return db;
+  } catch (error) {
+    console.error('Error connecting to MongoDB:', error);
+    // Throw the error to be caught by the handler
+    throw error;
   }
 };
 
 const handler = serverless(app);
 
 module.exports = async (req, res) => {
-  // Quick health/root response to verify the serverless function is reachable
-  // without forcing a DB connection. Useful for debugging deployment issues.
-  if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
-    return res.status(200).json({
-      status: 'ok',
-      mongoConfigured: !!process.env.MONGO_URI
-    });
+  try {
+    await connectToDatabase();
+    return handler(req, res);
+  } catch (error) {
+    // This will catch connection errors and return a 500
+    console.error('Failed to connect to database:', error);
+    return res.status(500).json({ message: 'Internal Server Error: Could not connect to the database.' });
   }
-
-  await connectToDatabase();
-  return handler(req, res);
 };
