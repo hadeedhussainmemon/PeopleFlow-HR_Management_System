@@ -1,64 +1,75 @@
 const serverless = require('serverless-http');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const app = require('../app');
 
-// Always load environment variables
+// Always load environment variables FIRST
 dotenv.config();
+
+const app = require('../app');
 
 let cachedDb = null;
 
 const connectToDatabase = async () => {
-  if (cachedDb) {
-    // If a connection is cached, use it
+  if (cachedDb && mongoose.connection.readyState === 1) {
     return cachedDb;
   }
 
-  // If no connection is cached, create a new one
   try {
     if (!process.env.MONGO_URI) {
       throw new Error('MONGO_URI is not defined.');
     }
     const db = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // 10-second timeout
+      serverSelectionTimeoutMS: 10000,
     });
     cachedDb = db;
     return db;
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
-    // Throw the error to be caught by the handler
     throw error;
   }
 };
 
 const handler = serverless(app);
 
-module.exports = async (req, res) => {
-  try {
-    // Always handle CORS preflight and lightweight endpoints without forcing DB connection
-    if (req.method === 'OPTIONS') {
-      return handler(req, res);
-    }
+// Helper to add CORS headers to any response
+const addCorsHeaders = (res) => {
+  const origin = process.env.FRONTEND_URL 
+    ? process.env.FRONTEND_URL.split(',')[0].trim().replace(/\/+$/, '')
+    : 'http://localhost:5173';
+  
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Cookie');
+};
 
+module.exports = async (req, res) => {
+  // Always add CORS headers first
+  addCorsHeaders(res);
+
+  // Handle preflight immediately
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  try {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
       return res.status(200).json({ status: 'ok', mongoConfigured: !!process.env.MONGO_URI });
     }
 
-    // Skip DB for unauthenticated auth-check to avoid connection-delay timeouts
-    try {
-      const cookieHeader = req.headers?.cookie || '';
-      const hasToken = /(?:^|;\s*)token=/.test(cookieHeader);
-      const isAuthMe = req.method === 'GET' && req.url.startsWith('/api/auth/me');
-      if (isAuthMe && !hasToken) {
-        return handler(req, res);
-      }
-    } catch {}
+    // Skip DB for unauthenticated auth-check
+    const cookieHeader = req.headers?.cookie || '';
+    const hasToken = /(?:^|;\s*)token=/.test(cookieHeader);
+    const isAuthMe = req.method === 'GET' && req.url.startsWith('/api/auth/me');
+    
+    if (isAuthMe && !hasToken) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
 
     await connectToDatabase();
     return handler(req, res);
   } catch (error) {
-    // This will catch connection errors and return a 500
-    console.error('Failed to connect to database:', error);
-    return res.status(500).json({ message: 'Internal Server Error: Could not connect to the database.' });
+    console.error('Server error:', error);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
