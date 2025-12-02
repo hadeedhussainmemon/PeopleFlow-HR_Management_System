@@ -3,9 +3,8 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const app = require('../app');
 
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config();
-}
+// Always load environment variables
+dotenv.config();
 
 let cachedDb = null;
 
