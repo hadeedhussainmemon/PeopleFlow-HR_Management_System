@@ -9,19 +9,40 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Cache mongoose connection across lambda invocations
 const connectToDatabase = async () => {
-  if (global.__mongooseConnection) {
+  // Return existing connection if already connected
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
+  }
+  
+  if (global.__mongooseConnection && mongoose.connection.readyState === 2) {
+    // Connection in progress, wait for it
     return global.__mongooseConnection;
   }
+  
   if (!process.env.MONGO_URI) {
     console.error('MONGO_URI not set');
     throw new Error('MONGO_URI not set');
   }
-  global.__mongooseConnection = mongoose.connect(process.env.MONGO_URI, {});
+  
+  // Set a connection timeout
+  const connectionTimeout = setTimeout(() => {
+    console.error('MongoDB connection timeout after 10s');
+    global.__mongooseConnection = null;
+  }, 10000);
+  
   try {
+    global.__mongooseConnection = mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+    });
     await global.__mongooseConnection;
+    clearTimeout(connectionTimeout);
+    console.log('MongoDB connected');
     return global.__mongooseConnection;
   } catch (e) {
+    clearTimeout(connectionTimeout);
     global.__mongooseConnection = null;
+    console.error('MongoDB connection failed:', e.message);
     throw e;
   }
 };
