@@ -1,0 +1,299 @@
+import StatCard from '@/components/StatCard';
+import LeaveCalendar from '@/components/LeaveCalendar';
+import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '../config/api';
+import { Briefcase, Activity, Calendar, Clock, CheckCircle, XCircle, Coffee, PieChart as PieChartIcon, BarChart as BarChartIcon } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import ConfirmDialog from '@/components/ui/confirm-dialog';
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
+
+const Dashboard = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // Fetch user's leave requests
+  const { data: myLeavesResp, isLoading } = useQuery({
+    queryKey: ['my-leaves'],
+    queryFn: () => api.get('/api/leaves/my-leaves').then((res) => res.data)
+  });
+
+  const { toast } = useToast();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toCancelId, setToCancelId] = useState(null);
+
+  const requestCancel = (leaveId) => {
+    setToCancelId(leaveId);
+    setConfirmOpen(true);
+  };
+
+  const performCancel = async (leaveId) => {
+    try {
+      await api.patch(`/api/leaves/${leaveId}/cancel`);
+      queryClient.invalidateQueries(['my-leaves']);
+      toast({ title: 'Cancelled', description: 'Leave request cancelled', variant: 'success' });
+    } catch (error) {
+      console.error('Failed to cancel leave', error);
+      toast({ title: 'Cancel failed', description: error.response?.data?.message || 'Failed to cancel leave', variant: 'error' });
+    }
+  };
+
+  // Fetch holidays
+
+  // Fetch holidays
+  const { data: holidaysData } = useQuery({
+    queryKey: ['holidays'],
+    queryFn: () => api.get('/api/holidays').then((res) => res.data)
+  });
+
+  const upcomingHolidays = holidaysData
+    ?.filter(h => new Date(h.date) >= new Date())
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .slice(0, 3) || [];
+
+  // Calculate pending requests
+  const myLeaves = myLeavesResp?.items || [];
+  const pendingCount = myLeaves.filter(leave => leave.status === 'pending').length || 0;
+  const approvedCount = myLeaves.filter(leave => leave.status === 'approved').length || 0;
+  const rejectedCount = myLeaves.filter(leave => leave.status === 'rejected').length || 0;
+
+  const recentLeaves = myLeaves.slice(0, 5);
+
+  // Chart Data
+  const balanceData = [
+    { name: 'Vacation', value: user?.leaveBalance?.vacation || 0, color: '#3B82F6' },
+    { name: 'Sick', value: user?.leaveBalance?.sick || 0, color: '#EF4444' },
+    { name: 'Casual', value: user?.leaveBalance?.casual || 0, color: '#10B981' },
+  ].filter(d => d.value > 0);
+
+  // Process leaves for bar chart (Leaves by Month)
+  const leavesByMonth = myLeaves
+    .filter(l => l.status === 'approved')
+    .reduce((acc, leave) => {
+      const month = new Date(leave.startDate).toLocaleString('default', { month: 'short' });
+      acc[month] = (acc[month] || 0) + leave.daysCalculated;
+      return acc;
+    }, {});
+
+  const barChartData = Object.entries(leavesByMonth).map(([name, days]) => ({ name, days }));
+
+  return (
+    <>
+    <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">Welcome back, {user?.firstName}! Here's your leave overview.</p>
+        </div>
+        <Button asChild>
+          <Link to="/apply-leave">Apply for Leave</Link>
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardHeader className="h-20 bg-muted/50" />
+              <CardContent className="h-12 bg-muted/30" />
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          <StatCard
+            title="Casual Balance"
+            value={user?.leaveBalance?.casual || 0}
+            icon={<Coffee className="h-4 w-4 text-muted-foreground" />}
+          />
+          <StatCard
+            title="Sick Balance"
+            value={user?.leaveBalance?.sick || 0}
+            icon={<Activity className="h-4 w-4 text-muted-foreground" />}
+          />
+          <StatCard
+            title="Vacation Balance"
+            value={user?.leaveBalance?.vacation || 0}
+            icon={<Briefcase className="h-4 w-4 text-muted-foreground" />}
+          />
+          <StatCard
+            title="Pending Requests"
+            value={pendingCount}
+            icon={<Clock className="h-4 w-4 text-yellow-500" />}
+          />
+          <StatCard
+            title="Approved (Year)"
+            value={approvedCount}
+            icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+          />
+        </div>
+      )}
+
+      {/* Charts Section */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <PieChartIcon className="h-5 w-5 text-gray-500" />
+              Leave Balance Distribution
+            </CardTitle>
+            <CardDescription>Your remaining leave days by type.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            {balanceData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={balanceData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {balanceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                No leave balance available.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChartIcon className="h-5 w-5 text-gray-500" />
+              Leaves Taken (Monthly)
+            </CardTitle>
+            <CardDescription>Approved leave days taken this year.</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px]">
+            {barChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barChartData}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="days" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-muted-foreground">
+                No approved leaves yet.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <div className="col-span-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Leave Requests</CardTitle>
+              <CardDescription>
+                You have made {myLeaves.length} leave requests total.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-8">
+                {recentLeaves.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No leave requests found.</p>
+                ) : (
+                  recentLeaves.map((leave) => (
+                    <div key={leave._id} className="flex items-center">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none capitalize">
+                          {leave.leaveType} Leave
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="ml-auto font-medium flex items-center gap-2">
+                        <span className={`px-2 py-1 rounded-full text-xs ${
+                          leave.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+                          leave.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' :
+                          leave.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100' :
+                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
+                        }`}>
+                          {leave.status}
+                        </span>
+                        {leave.status === 'pending' && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => requestCancel(leave._id)}
+                            title="Cancel Request"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="col-span-3 space-y-4">
+          <LeaveCalendar />
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Holidays</CardTitle>
+              <CardDescription>Next 3 holidays.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {upcomingHolidays.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No upcoming holidays.</p>
+                ) : (
+                  upcomingHolidays.map((holiday) => (
+                    <div key={holiday._id} className="flex items-center justify-between border-b pb-2 last:border-0 last:pb-0">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium leading-none">{holiday.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(holiday.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Cancel Leave"
+        description="Are you sure you want to cancel this pending leave request?"
+        onConfirm={() => performCancel(toCancelId)}
+      />
+    </>
+  );
+};
+
+export default Dashboard;
+
+
