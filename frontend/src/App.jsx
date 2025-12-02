@@ -25,7 +25,8 @@ const App = () => {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
