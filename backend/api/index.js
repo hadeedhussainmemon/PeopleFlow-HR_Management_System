@@ -29,6 +29,15 @@ const connectToDatabase = async () => {
 const handler = serverless(app);
 
 module.exports = async (req, res) => {
+  // Quick health/root response to verify the serverless function is reachable
+  // without forcing a DB connection. Useful for debugging deployment issues.
+  if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
+    return res.status(200).json({
+      status: 'ok',
+      mongoConfigured: !!process.env.MONGO_URI
+    });
+  }
+
   await connectToDatabase();
   return handler(req, res);
 };
