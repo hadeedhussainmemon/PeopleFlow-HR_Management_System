@@ -7,13 +7,6 @@ if (process.env.NODE_ENV !== 'production') {
   dotenv.config();
 }
 
-// Ensure MONGO_URI is set
-if (!process.env.MONGO_URI) {
-  console.error('FATAL ERROR: MONGO_URI is not defined.');
-  // In a serverless environment, throwing an error is better than process.exit
-  throw new Error('MONGO_URI is not defined.');
-}
-
 let cachedDb = null;
 
 const connectToDatabase = async () => {
@@ -24,6 +17,9 @@ const connectToDatabase = async () => {
 
   // If no connection is cached, create a new one
   try {
+    if (!process.env.MONGO_URI) {
+      throw new Error('MONGO_URI is not defined.');
+    }
     const db = await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -42,6 +38,25 @@ const handler = serverless(app);
 
 module.exports = async (req, res) => {
   try {
+    // Always handle CORS preflight and lightweight endpoints without forcing DB connection
+    if (req.method === 'OPTIONS') {
+      return handler(req, res);
+    }
+
+    if (req.method === 'GET' && (req.url === '/' || req.url === '/health')) {
+      return res.status(200).json({ status: 'ok', mongoConfigured: !!process.env.MONGO_URI });
+    }
+
+    // Skip DB for unauthenticated auth-check to avoid connection-delay timeouts
+    try {
+      const cookieHeader = req.headers?.cookie || '';
+      const hasToken = /(?:^|;\s*)token=/.test(cookieHeader);
+      const isAuthMe = req.method === 'GET' && req.url.startsWith('/api/auth/me');
+      if (isAuthMe && !hasToken) {
+        return handler(req, res);
+      }
+    } catch {}
+
     await connectToDatabase();
     return handler(req, res);
   } catch (error) {

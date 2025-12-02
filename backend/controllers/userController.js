@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const LeaveRequest = require('../models/LeaveRequest');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 // @desc    Get all users
 // @route   GET /api/users
