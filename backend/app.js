@@ -14,9 +14,23 @@ app.use(cookieParser());
 app.use(helmet());
 
 // CORS configuration
-const allowedOrigins = process.env.FRONTEND_URL
+// Allow FRONTEND_URL env entries to be full URLs (including paths).
+// Normalize to origin (scheme + host) so comparisons with the request
+// `Origin` header succeed even if someone added a path like `/login`.
+const rawOrigins = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',')
   : ['http://localhost:5173'];
+
+const allowedOrigins = rawOrigins.map((val) => {
+  try {
+    return new URL(val).origin;
+  } catch (e) {
+    // Fallback: strip trailing slashes and any path portion
+    return (val || '').replace(/\/+$/, '').replace(/^(https?:\/\/[^\/]+).*/i, '$1');
+  }
+});
+
+console.debug('[CORS] normalized allowedOrigins:', allowedOrigins);
 
 // Lightweight debug logging for CORS to help diagnose deployments.
 // Logs will show incoming Origin and the allowedOrigins array.
@@ -25,7 +39,6 @@ app.use(cors({
     try {
       // origin will be undefined for same-origin or curl requests
       console.debug('[CORS] incoming origin:', origin);
-      console.debug('[CORS] allowedOrigins:', allowedOrigins);
       if (!origin) return callback(null, true);
       if (allowedOrigins.indexOf(origin) === -1) {
         console.warn('[CORS] Rejected origin:', origin);
