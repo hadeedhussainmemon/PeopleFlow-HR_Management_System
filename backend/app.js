@@ -14,21 +14,24 @@ app.use(cookieParser());
 app.use(helmet());
 
 // CORS configuration
-// Allow FRONTEND_URL env entries to be full URLs (including paths).
+// Allow FRONTEND_URL env to be a comma-separated list of URLs or a single URL.
 // Normalize to origin (scheme + host) so comparisons with the request
 // `Origin` header succeed even if someone added a path like `/login`.
-const rawOrigins = process.env.FRONTEND_URL
-  ? process.env.FRONTEND_URL
-  : ['http://localhost:5173'];
-
-const allowedOrigins = rawOrigins.map((val) => {
+const normalizeOrigin = (val) => {
   try {
     return new URL(val).origin;
   } catch (e) {
     // Fallback: strip trailing slashes and any path portion
     return (val || '').replace(/\/+$/, '').replace(/^(https?:\/\/[^\/]+).*/i, '$1');
   }
-});
+};
+
+// Parse FRONTEND_URL - can be a single URL or comma-separated list
+const rawOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map(s => s.trim())
+  : ['http://localhost:5173'];
+
+const allowedOrigins = rawOrigins.map(normalizeOrigin);
 
 console.debug('[CORS] normalized allowedOrigins:', allowedOrigins);
 
