@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { User, Lock } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -45,8 +46,8 @@ const Login = () => {
       <Card className="w-[380px] max-w-[92%] glass-card login-card border-slate-700/50 transform transition-transform hover:scale-[1.01]">
         <CardHeader>
           <div className="flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-white/70 flex items-center justify-center shadow-inner mb-2">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner mb-2" style={{ backgroundColor: 'hsl(var(--primary) / 0.12)' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 16a8 8 0 0116 0H2z" clipRule="evenodd" />
               </svg>
             </div>
@@ -57,17 +58,19 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <CardContent>
             {error && (
-              <div className="mb-4 p-3 bg-red-900/30 border border-red-700 text-red-300 rounded">
+              <div role="alert" aria-live="polite" className="mb-4 p-3 bg-red-900/30 border border-red-700 text-red-300 rounded">
                 {error}
               </div>
             )}
             <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5 floating-label">
-                <Input id="email" type="email" placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} className="bg-transparent login-input" />
+              <div className="relative flex flex-col space-y-1.5 floating-label">
+                <div className="absolute left-3 top-2.5 pointer-events-none"><User className="h-4 w-4 text-muted-foreground" /></div>
+                <Input id="email" type="email" placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} className="bg-transparent login-input pl-10" aria-label="Email" />
                 <Label htmlFor="email" className="login-label">Email</Label>
               </div>
-              <div className="flex flex-col space-y-1.5 floating-label">
-                <Input id="password" type="password" placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input" />
+              <div className="relative flex flex-col space-y-1.5 floating-label">
+                <div className="absolute left-3 top-2.5 pointer-events-none"><Lock className="h-4 w-4 text-muted-foreground" /></div>
+                <Input id="password" type="password" placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input pl-10" aria-label="Password" />
                 <Label htmlFor="password" className="login-label">Password</Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -84,7 +87,7 @@ const Login = () => {
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+            <CardFooter className="flex flex-col gap-4">
             <div className="flex items-center justify-between w-full text-sm">
               <div className="flex items-center space-x-2">
                 <input 
@@ -97,7 +100,7 @@ const Login = () => {
                 <Label htmlFor="rememberMeFooter" className="cursor-pointer font-normal">Remember me</Label>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-rose-400 to-orange-400 text-white shadow-md hover:scale-105 transition-transform" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-emerald-400 to-emerald-600 text-white shadow-md hover:scale-105 transition-transform" disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </CardFooter>

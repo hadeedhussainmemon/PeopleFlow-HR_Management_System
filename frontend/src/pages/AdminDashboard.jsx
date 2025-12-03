@@ -348,10 +348,10 @@ const AdminDashboard = () => {
               <span>Weekly Holidays (Sundays)</span>
             </label>
           </div>
-          <Button onClick={() => setIsCreateUserDialogOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={() => setIsCreateUserDialogOpen(true)} className="bg-primary text-primary-foreground hover:brightness-95">
             <Plus className="mr-2 h-4 w-4" /> Add User
           </Button>
-          <Button onClick={() => setIsAccrueDialogOpen(true)} variant="secondary">
+          <Button onClick={() => setIsAccrueDialogOpen(true)} variant="secondary" className="bg-primary/8 border border-primary/12">
             <Coins className="mr-2 h-4 w-4" /> Accrue Leaves
           </Button>
           <Button onClick={handleExport} variant="outline">

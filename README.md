@@ -39,6 +39,8 @@ The application features a secure authentication system using JSON Web Tokens (J
      - **In-line manager assignment:** Admins can assign managers to users inline from the users table.
     - **CSV Export:** Admins can export the currently displayed users list to CSV for reporting.
     - **Animated Login Page:** The login page has an updated, polished, animated design with floating labels, gradient accents, and subtle micro-interactions.
+    - **Updated Palette**: Both light and dark palettes were updated to use the Graphite / Charcoal / Granite base tones with Spring Green as the main accent color and Frosted Mint / Alabaster grey for light surfaces (palettes included in the repo and used in `index.css`).
+    - **Login UI**: The login page was redesigned using Spring Green and muted backgrounds to match the new palette — it includes floating labels, input icons, improved focus states, responsive layout, and accessible error feedback.
 
 ## 4. Application Flow & User Journeys
 
