@@ -324,5 +324,6 @@ module.exports = {
   updateUser, 
   deleteUser,
   getDashboardStats,
-  accrueLeaves
+  accrueLeaves,
+  exportUsersCSV
 };

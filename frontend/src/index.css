@@ -107,6 +107,9 @@ body {
 
 .login-input {
   color: hsl(var(--card-foreground));
+  background-color: hsl(var(--card) / 0.12);
+  border: 1px solid hsl(var(--border) / 0.12);
+  padding-left: 0.5rem;
 }
 
 .login-label {
@@ -123,6 +126,16 @@ body {
   outline: none;
   box-shadow: 0 0 0 6px hsl(var(--ring) / 0.12);
   border-color: hsl(var(--ring));
+}
+
+/* Override Chrome autofill yellow for login inputs */
+.animated-gradient-login input:-webkit-autofill,
+.animated-gradient-login input:-webkit-autofill:hover,
+.animated-gradient-login input:-webkit-autofill:focus,
+.animated-gradient-login input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px hsl(var(--card) / 0.95) inset !important;
+  box-shadow: 0 0 0 30px hsl(var(--card) / 0.95) inset !important;
+  -webkit-text-fill-color: hsl(var(--card-foreground)) !important;
 }
 
 .floating-label {

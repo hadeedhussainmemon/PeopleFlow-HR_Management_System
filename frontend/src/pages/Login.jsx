@@ -93,15 +93,9 @@ const Login = () => {
           </CardContent>
             <CardFooter className="flex flex-col gap-4">
             <div className="flex items-center justify-between w-full text-sm">
-              <div className="flex items-center space-x-2">
-                <input 
-                  id="rememberMeFooter" 
-                  type="checkbox" 
-                  checked={rememberMe} 
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 cursor-pointer"
-                />
-                <Label htmlFor="rememberMeFooter" className="cursor-pointer font-normal">Remember me</Label>
+              <div className="text-sm">{/* placeholder for forgot password link */}</div>
+              <div>
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot Password?</Link>
               </div>
             </div>
             <Button type="submit" className="w-full bg-gradient-to-r from-emerald-400 to-emerald-600 text-white shadow-md hover:scale-105 transition-transform" disabled={loading}>
