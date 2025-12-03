@@ -174,7 +174,10 @@ body {
   position: relative;
 }
 .floating-label input:focus + label,
-.floating-label input:not(:placeholder-shown) + label {
+.floating-label input:not(:placeholder-shown) + label,
+.floating-label.floating label,
+.floating-label input:-webkit-autofill + label,
+.floating-label input:-internal-autofill-selected + label {
   transform: translateY(-1.6rem) scale(0.85);
   color: hsl(var(--ring));
 }

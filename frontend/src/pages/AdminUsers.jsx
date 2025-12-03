@@ -193,16 +193,16 @@ const AdminUsers = () => {
                 <TableCell><span className="capitalize bg-muted/20 px-2 py-1 rounded text-xs font-medium text-muted-foreground">{user.role}</span></TableCell>
                 <TableCell>{user.department || '-'}</TableCell>
                 <TableCell>
-                  <Select value={user.managerId?._id || ''} disabled={updatingUserId === user._id} onValueChange={(val) => {
+                  <Select value={user.managerId?._id || '_none'} disabled={updatingUserId === user._id} onValueChange={(val) => {
                       setUpdatingUserId(user._id);
-                      updateUserMutation.mutate({ id: user._id, data: { managerId: val || null } }, {
+                      updateUserMutation.mutate({ id: user._id, data: { managerId: val === '_none' ? null : val } }, {
                         onSuccess: () => setUpdatingUserId(null),
                         onError: () => setUpdatingUserId(null),
                       });
                     }}>
                     <SelectTrigger><SelectValue>{user.managerId ? `${user.managerId.firstName} ${user.managerId.lastName}` : 'Unassigned'}</SelectValue></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="_none">Unassigned</SelectItem>
                       {managersList?.map(m => (<SelectItem value={m._id} key={m._id}>{m.firstName} {m.lastName}</SelectItem>))}
                     </SelectContent>
                   </Select>

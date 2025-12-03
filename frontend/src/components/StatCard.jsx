@@ -36,7 +36,7 @@ const colorMap = {
 const StatCard = ({ title, value, icon, color = 'gray' }) => {
   const c = colorMap[color] || colorMap.gray;
   return (
-    <Card className={`p-6 ${c.bg} transform transition hover:scale-105 hover:shadow-lg`}> 
+    <Card className={`p-4 sm:p-6 ${c.bg} transform transition hover:scale-105 hover:shadow-lg`}> 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className={`text-sm font-medium ${c.text}`}>{title}</CardTitle>
         <div className={`w-12 h-12 rounded-full flex items-center justify-center ${c.iconBg}`}>
@@ -44,7 +44,7 @@ const StatCard = ({ title, value, icon, color = 'gray' }) => {
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        <div className="text-3xl font-bold text-foreground">{value}</div>
+        <div className="text-2xl sm:text-3xl font-bold text-foreground">{value}</div>
       </CardContent>
     </Card>
   );

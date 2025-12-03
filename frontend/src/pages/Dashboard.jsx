@@ -259,15 +259,11 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-        
-        <div className="col-span-3 space-y-4">
-          <LeaveCalendar />
 
           <Card className="glass-card border-border">
             <CardHeader>
               <CardTitle className="text-foreground">Upcoming Holidays</CardTitle>
-                  <CardDescription className="text-muted-foreground">Next 3 holidays.</CardDescription>
+              <CardDescription className="text-muted-foreground">Next 3 holidays.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -288,6 +284,12 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+        
+        <div className="col-span-3 space-y-4">
+          <LeaveCalendar />
+
+          
         </div>
       </div>
     </div>

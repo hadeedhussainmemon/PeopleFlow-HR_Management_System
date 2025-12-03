@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import api from '../config/api';
 import { Link } from 'react-router-dom';
@@ -24,12 +24,30 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
+  // Detect input autofill values and set initial state so floating labels show properly
+  useEffect(() => {
+    try {
+      const emailInput = document.getElementById('email');
+      const pwdInput = document.getElementById('password');
+      if (emailInput?.value && !email) setEmail(emailInput.value);
+      if (pwdInput?.value && !password) setPassword(pwdInput.value);
+    } catch (err) {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
       const { data } = await api.post('/api/auth/login', { email, password, rememberMe });
+      // For local development (no secure cookies), accept returned token and set it in localStorage and axios header
+      if (data?.token && import.meta.env.DEV) {
+        localStorage.setItem('dev_token', data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+      }
       login(data);
     } catch (error) {
       console.error('Login failed', error);
@@ -64,14 +82,14 @@ const Login = () => {
               </div>
             )}
             <div className="grid w-full items-center gap-4">
-              <div className="relative flex flex-col space-y-1.5 floating-label">
+              <div className={`relative flex flex-col space-y-1.5 floating-label ${email ? 'floating' : ''}`}>
                 <div className="absolute left-3 top-2.5 pointer-events-none"><User className="h-4 w-4 text-muted-foreground" /></div>
-                <Input id="email" type="email" placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} className="bg-transparent login-input pl-10" aria-label="Email" />
+                <Input id="email" type="email" placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} className="bg-transparent login-input pl-10" autoComplete="username" aria-label="Email" />
                 <Label htmlFor="email" className="login-label">Email</Label>
               </div>
-              <div className="relative flex flex-col space-y-1.5 floating-label">
+              <div className={`relative flex flex-col space-y-1.5 floating-label ${password ? 'floating' : ''}`}>
                 <div className="absolute left-3 top-2.5 pointer-events-none"><Lock className="h-4 w-4 text-muted-foreground" /></div>
-                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input pl-10" aria-label="Password" aria-describedby="passwordHelp" />
+                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input pl-10" autoComplete="current-password" aria-label="Password" aria-describedby="passwordHelp" />
                 <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-2.5" onClick={() => setShowPassword((v) => !v)}>
                   {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
                 </button>
@@ -98,7 +116,7 @@ const Login = () => {
                 <Link to="/forgot-password" className="text-sm text-primary hover:underline">Forgot Password?</Link>
               </div>
             </div>
-            <Button type="submit" className="w-full bg-gradient-to-r from-emerald-400 to-emerald-600 text-white shadow-md hover:scale-105 transition-transform" disabled={loading}>
+            <Button type="submit" className="w-full bg-primary text-primary-foreground shadow-md hover:brightness-95 transition-transform" disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </CardFooter>

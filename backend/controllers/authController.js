@@ -68,13 +68,14 @@ const register = async (req, res) => {
     });
 
     if (user) {
-      generateToken(res, user._id);
+      const token = generateToken(res, user._id);
       res.status(201).json({
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        ...(process.env.NODE_ENV !== 'production' ? { token } : {}),
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -137,13 +138,14 @@ const login = async (req, res) => {
       } catch (err) {
         console.error('Failed to record admin login history', err);
       }
-      generateToken(res, user._id, rememberMe);
+      const token = generateToken(res, user._id, rememberMe);
       return res.json({
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        ...(process.env.NODE_ENV !== 'production' ? { token } : {}),
       });
     }
 
@@ -158,13 +160,14 @@ const login = async (req, res) => {
       } catch (err) {
         console.error('Failed to record login history', err);
       }
-      generateToken(res, user._id, rememberMe);
+      const token = generateToken(res, user._id, rememberMe);
       res.json({
         _id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        ...(process.env.NODE_ENV !== 'production' ? { token } : {}),
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -201,10 +204,11 @@ const generateToken = (res, userId, rememberMe = false) => {
   // For cross-origin requests, sameSite must be 'none' and secure must be true
   res.cookie('token', token, {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production', // only secure in production
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge,
   });
+  return token;
 };
 
 // @desc    Logout user
@@ -213,8 +217,8 @@ const generateToken = (res, userId, rememberMe = false) => {
 const logout = (req, res) => {
   res.cookie('token', '', {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     expires: new Date(0),
   });
   res.status(200).json({ message: 'Logged out successfully' });

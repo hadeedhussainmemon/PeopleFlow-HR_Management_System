@@ -26,6 +26,11 @@ const useAuthStore = create((set, get) => ({
     set({ _isCheckingAuth: true });
     
     try {
+      // If dev token is present (development only), set Authorization header to allow auth without cookies
+      if (import.meta.env.DEV) {
+        const dt = localStorage.getItem('dev_token');
+        if (dt) api.defaults.headers.common['Authorization'] = `Bearer ${dt}`;
+      }
       const res = await api.get('/api/auth/me', {
         signal: authCheckController.signal
       });
@@ -58,6 +63,10 @@ const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await api.post('/api/auth/logout');
+      if (import.meta.env.DEV) {
+        localStorage.removeItem('dev_token');
+        delete api.defaults.headers.common['Authorization'];
+      }
       set({ user: null, isLoggedIn: false });
     } catch (error) {
       console.error('Logout failed', error);
