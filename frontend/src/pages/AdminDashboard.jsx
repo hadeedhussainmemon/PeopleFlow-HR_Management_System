@@ -4,6 +4,7 @@ import ConfirmDialog from '@/components/ui/confirm-dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../config/api';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -15,20 +16,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedUser, setSelectedUser] = useState(null);
   const [selectedHoliday, setSelectedHoliday] = useState(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateUserDialogOpen, setIsCreateUserDialogOpen] = useState(false);
+  // no edit dialog in admin dashboard (moved to Admin Users page)
   const [isHolidayDialogOpen, setIsHolidayDialogOpen] = useState(false);
   const [isCreateHolidayDialogOpen, setIsCreateHolidayDialogOpen] = useState(false);
   const [isAccrueDialogOpen, setIsAccrueDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchInput, setSearchInput] = useState('');
-  const [userPage, setUserPage] = useState(1);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [sortKey, setSortKey] = useState('createdAt');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [roleFilter, setRoleFilter] = useState('all');
+  // user management moved to dedicated Users page
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -57,12 +50,6 @@ const AdminDashboard = () => {
     queryKey: ['admin-stats'],
     queryFn: () => api.get('/api/users/stats/dashboard').then((res) => res.data)
   });
-  // Fetch managers list for inline manager assignment
-  const { data: managersList } = useQuery({
-    queryKey: ['managers-list'],
-    queryFn: () => api.get('/api/users?page=1&limit=100&role=manager').then((res) => res.data.items || []),
-    retry: 0
-  });
 
   const handleExport = async () => {
     try {
@@ -81,62 +68,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleExportUsers = async () => {
-    try {
-      const rows = [['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Department', 'Manager', 'Vacation', 'Sick', 'Casual', 'Created At']];
-      users.forEach(u => {
-        rows.push([
-          u._id,
-          u.firstName,
-          u.lastName,
-          u.email,
-          u.role,
-          u.department || '-',
-          u.managerId ? `${u.managerId.firstName} ${u.managerId.lastName}` : '-',
-          u.leaveBalance?.vacation || 0,
-          u.leaveBalance?.sick || 0,
-          u.leaveBalance?.casual || 0,
-          new Date(u.createdAt).toISOString()
-        ]);
-      });
-      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `users_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast({ title: 'Export started', description: 'CSV download should begin shortly', variant: 'success' });
-    } catch (error) {
-      console.error('Export users failed', error);
-      toast({ title: 'Export failed', description: 'Unable to export users list', variant: 'error' });
-    }
-  };
 
-  const handleExportAll = async () => {
-    try {
-      const response = await api.get('/api/users/export', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `users_${new Date().toISOString().split('T')[0]}_all.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      toast({ title: 'Export started', description: 'CSV download should begin shortly', variant: 'success' });
-    } catch (error) {
-      console.error('Export all failed', error);
-      toast({ title: 'Export failed', description: 'Unable to export all users', variant: 'error' });
-    }
-  };
-
-  // Fetch users with pagination
-  const { data: usersData, isLoading: usersLoading } = useQuery({
-    queryKey: ['admin-users', userPage, searchTerm, roleFilter, sortKey, sortOrder],
-    queryFn: () => api.get(`/api/users?page=${userPage}&limit=10&search=${searchTerm}&role=${roleFilter === 'all' ? '' : roleFilter}&sort=${sortKey}&order=${sortOrder}`).then((res) => res.data)
-  });
 
   // Fetch holidays
   const { data: holidays = [], isLoading: holidaysLoading } = useQuery({
@@ -144,33 +76,7 @@ const AdminDashboard = () => {
     queryFn: () => api.get('/api/holidays').then((res) => res.data)
   });
 
-  // Mutations
-  const createUserMutation = useMutation({
-    mutationFn: (newUser) => api.post('/api/users', newUser),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-      setIsCreateUserDialogOpen(false);
-    }
-  });
-
-  const deleteUserMutation = useMutation({
-    mutationFn: (userId) => api.delete(`/api/users/${userId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
-    }
-  });
-
-  const updateUserMutation = useMutation({
-    mutationFn: ({ id, data }) => api.put(`/api/users/${id}`, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast({ title: 'User updated', description: 'User details saved successfully', variant: 'success' });
-      setIsEditDialogOpen(false);
-      setSelectedUser(null);
-    }
-  });
+  // User management has moved to the dedicated Users page
 
   const createHolidayMutation = useMutation({
     mutationFn: (newHoliday) => api.post('/api/holidays', newHoliday),
@@ -208,44 +114,7 @@ const AdminDashboard = () => {
     }
   });
 
-  // Handlers
-  const handleCreateUser = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    createUserMutation.mutate({
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      email: formData.get('email'),
-      password: formData.get('password'),
-      role: formData.get('role'),
-      department: formData.get('department'),
-    });
-  };
-
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const handleDeleteUser = (userId) => {
-    setDeleteTarget({ type: 'user', id: userId });
-  };
-
-  const handleUpdateUser = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    updateUserMutation.mutate({
-      id: selectedUser._id,
-      data: {
-        firstName: formData.get('firstName'),
-        lastName: formData.get('lastName'),
-        email: formData.get('email'),
-        role: formData.get('role'),
-        department: formData.get('department'),
-        leaveBalance: {
-          sick: parseInt(formData.get('sick')),
-          casual: parseInt(formData.get('casual')),
-          vacation: parseInt(formData.get('vacation'))
-        }
-      }
-    });
-  };
 
   const handleCreateHoliday = (e) => {
     e.preventDefault();
@@ -282,43 +151,19 @@ const AdminDashboard = () => {
     });
   };
 
-  const users = usersData?.items || [];
-  const totalPages = usersData?.pages || 1;
+  // removed filteredUsers; handled in AdminUsers page
 
-  const filteredUsers = users.filter(u => {
-    if (roleFilter && roleFilter !== 'all') {
-      return u.role === roleFilter;
-    }
-    return true;
-  });
-
-  // Fetch selected user activity when view dialog opens
-  const { data: userActivity, refetch: refetchActivity } = useQuery({
-    queryKey: ['user-activity', selectedUser?._id],
-    enabled: !!selectedUser,
-    queryFn: () => api.get(`/api/users/${selectedUser?._id}/activity`).then((res) => res.data),
-    retry: 0,
-  });
+  // moved user activity logic to Users page
 
   // Debounce search input
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setSearchTerm(searchInput);
-      setUserPage(1); // reset page whenever search changes
-    }, 400);
-    return () => clearTimeout(t);
-  }, [searchInput]);
-
-  useEffect(() => {
-    setUserPage(1);
-  }, [roleFilter, sortKey, sortOrder]);
+  // removed user search set hooks (now in AdminUsers page)
 
   // Chart Data Preparation
   const leaveStatusData = [
-    { name: 'Pending', value: stats?.pendingLeaves || 0, color: '#EAB308' },
-    { name: 'Approved', value: stats?.approvedLeaves || 0, color: '#22C55E' },
-    { name: 'Rejected', value: stats?.rejectedLeaves || 0, color: '#EF4444' },
-  ];
+      { name: 'Pending', value: stats?.pendingLeaves || 0, color: 'hsl(var(--warning))' },
+      { name: 'Approved', value: stats?.approvedLeaves || 0, color: 'hsl(var(--success))' },
+      { name: 'Rejected', value: stats?.rejectedLeaves || 0, color: 'hsl(var(--danger))' },
+    ];
 
   // Mock data for leaves by department (in a real app, this would come from the backend)
   const departmentData = [
@@ -348,21 +193,17 @@ const AdminDashboard = () => {
               <span>Weekly Holidays (Sundays)</span>
             </label>
           </div>
-          <Button onClick={() => setIsCreateUserDialogOpen(true)} className="bg-primary text-primary-foreground hover:brightness-95">
-            <Plus className="mr-2 h-4 w-4" /> Add User
-          </Button>
+          {/* Add User moved to the dedicated Users page */}
           <Button onClick={() => setIsAccrueDialogOpen(true)} variant="secondary" className="bg-primary/8 border border-primary/12">
             <Coins className="mr-2 h-4 w-4" /> Accrue Leaves
           </Button>
           <Button onClick={handleExport} variant="outline">
             <Download className="mr-2 h-4 w-4" /> Export Report
           </Button>
-          <Button onClick={handleExportUsers} variant="outline">
-            <Download className="mr-2 h-4 w-4" /> Export Users
+          <Button asChild variant="outline" className="ml-2">
+            <Link to="/admin/users">Manage Users</Link>
           </Button>
-          <Button onClick={handleExportAll} variant="outline">
-            <Download className="mr-2 h-4 w-4" /> Export All
-          </Button>
+          {/* User export moved to Users page */}
           <Button onClick={() => setIsCreateHolidayDialogOpen(true)} variant="outline">
             <Calendar className="mr-2 h-4 w-4" /> Add Holiday
           </Button>
@@ -371,40 +212,48 @@ const AdminDashboard = () => {
 
       {/* Stats Overview Cards */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow bg-card">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
-            <Users className="h-5 w-5 text-blue-500" />
+            <Card className="border-l-4 border-info shadow-sm hover:shadow-md transition-shadow bg-card">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Users</CardTitle>
+              <span className="text-xs text-muted-foreground">{stats?.totalUsers || 0}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-info" />
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/admin/users">Manage</Link>
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-6">
             <div className="text-3xl font-bold text-foreground">{stats?.totalUsers || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">Active accounts</p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-yellow-500 shadow-sm hover:shadow-md transition-shadow bg-card">
+        <Card className="border-l-4 border-warning shadow-sm hover:shadow-md transition-shadow bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending Requests</CardTitle>
-            <Clock className="h-5 w-5 text-yellow-500" />
+            <Clock className="h-5 w-5 text-warning" />
           </CardHeader>
           <CardContent className="p-6">
             <div className="text-3xl font-bold text-foreground">{stats?.pendingLeaves || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">Requires attention</p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-green-500 shadow-sm hover:shadow-md transition-shadow bg-card">
+        <Card className="border-l-4 border-success shadow-sm hover:shadow-md transition-shadow bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Approved Leaves</CardTitle>
-            <CheckCircle className="h-5 w-5 text-green-500" />
+            <CheckCircle className="h-5 w-5 text-success" />
           </CardHeader>
           <CardContent className="p-6">
             <div className="text-3xl font-bold text-foreground">{stats?.approvedLeaves || 0}</div>
             <p className="text-xs text-muted-foreground mt-1">This year</p>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow bg-card">
+        <Card className="border-l-4 border-accent shadow-sm hover:shadow-md transition-shadow bg-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Leaves</CardTitle>
-            <FileText className="h-5 w-5 text-purple-500" />
+            <FileText className="h-5 w-5 text-accent" />
           </CardHeader>
           <CardContent className="p-6">
             <div className="text-3xl font-bold text-foreground">{stats?.totalLeaves || 0}</div>
@@ -458,7 +307,7 @@ const AdminDashboard = () => {
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="leaves" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="leaves" fill="hsl(var(--info))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -469,19 +318,14 @@ const AdminDashboard = () => {
       <div className="bg-card rounded-xl shadow-sm border p-1">
         <div className="flex gap-1 p-1 bg-muted/40 rounded-lg mb-6 w-fit">
             <button
-            className={`px-6 py-2.5 text-sm font-medium rounded-md transition-all ${activeTab === 'overview' ? 'bg-slate-700 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-6 py-2.5 text-sm font-medium rounded-md transition-all ${activeTab === 'overview' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab('overview')}
           >
             Recent Activity
           </button>
+          {/* User Management moved to Admin Users page (left nav) */}
           <button
-            className={`px-6 py-2.5 text-sm font-medium rounded-md transition-all ${activeTab === 'users' ? 'bg-slate-700 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-            onClick={() => setActiveTab('users')}
-          >
-            User Management
-          </button>
-          <button
-            className={`px-6 py-2.5 text-sm font-medium rounded-md transition-all ${activeTab === 'holidays' ? 'bg-slate-700 text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+            className={`px-6 py-2.5 text-sm font-medium rounded-md transition-all ${activeTab === 'holidays' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
             onClick={() => setActiveTab('holidays')}
           >
             Holidays
@@ -509,7 +353,7 @@ const AdminDashboard = () => {
                       <TableRow key={leave._id}>
                         <TableCell className="font-medium text-foreground">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-blue-900/20 flex items-center justify-center text-blue-300 text-xs font-bold">
+                            <div className="w-8 h-8 rounded-full bg-info-muted flex items-center justify-center text-info-foreground text-xs font-bold">
                               {leave.employeeId?.firstName?.[0]}{leave.employeeId?.lastName?.[0]}
                             </div>
                             {leave.employeeId?.firstName} {leave.employeeId?.lastName}
@@ -521,9 +365,9 @@ const AdminDashboard = () => {
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            leave.status === 'approved' ? 'bg-green-900/20 text-green-300' :
-                            leave.status === 'rejected' ? 'bg-red-900/20 text-red-300' :
-                            'bg-yellow-900/20 text-yellow-300'
+                            leave.status === 'approved' ? 'bg-success-muted text-success-foreground' :
+                            leave.status === 'rejected' ? 'bg-danger-muted text-danger-foreground' :
+                            'bg-warning-muted text-warning-foreground'
                           }`}>
                             {leave.status}
                           </span>
@@ -534,191 +378,12 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               </div>
-              {/* Mobile list view */}
-              <div className="space-y-3 md:hidden mt-4">
-                {filteredUsers.map((user) => (
-                  <Card key={user._id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{user.firstName} {user.lastName}</div>
-                        <div className="text-sm text-muted-foreground">{user.email}</div>
-                        <div className="text-xs text-muted-foreground">{user.role} • {user.department || '-'}</div>
-                        <div className="text-xs text-muted-foreground">Manager: {user.managerId ? `${user.managerId.firstName} ${user.managerId.lastName}` : '-'}</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <div className="text-sm">V {user.leaveBalance?.vacation || 0} • S {user.leaveBalance?.sick || 0} • C {user.leaveBalance?.casual || 0}</div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="ghost" onClick={() => { setSelectedUser(user); setIsViewDialogOpen(true); }}>View</Button>
-                          <Button size="sm" variant="ghost" onClick={() => { setSelectedUser(user); setIsEditDialogOpen(true); }}>Edit</Button>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              {/* Mobile user cards removed - user management moved to Users page */}
               
             </div>
           )}
 
-          {/* Users Tab */}
-          {activeTab === 'users' && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center gap-4 flex-col md:flex-row">
-                <div className="flex gap-2 w-full max-w-md">
-                  <Input
-                    placeholder="Search users by name, email, or department..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full"
-                    aria-label="Search users"
-                  />
-                  <Button variant="outline" size="sm" onClick={() => { setSearchInput(''); setSearchTerm(''); }}>
-                    Clear
-                  </Button>
-                </div>
-                <div className="flex gap-2 items-center">
-                  <Label className="text-sm">Sort by:</Label>
-                  <Select value={sortKey} onValueChange={(val) => setSortKey(val)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="createdAt">Created</SelectItem>
-                      <SelectItem value="firstName">First Name</SelectItem>
-                      <SelectItem value="role">Role</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="ghost" size="sm" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>{sortOrder === 'asc' ? 'Asc' : 'Desc'}</Button>
-                  <Label className="text-sm">Filter:</Label>
-                  <Select value={roleFilter} onValueChange={(val) => setRoleFilter(val)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="employee">Employees</SelectItem>
-                      <SelectItem value="manager">Managers</SelectItem>
-                      <SelectItem value="admin">Admins</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="text-sm text-muted-foreground mt-2 md:mt-0">Showing {filteredUsers.length} results</div>
-              <div className="rounded-md border overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                      <TableRow className="bg-muted/10">
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Department</TableHead>
-                      <TableHead>Manager</TableHead>
-                      <TableHead>Leave Balance (V/S/C)</TableHead>
-                      <TableHead>Last Login</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers
-                      .slice()
-                      .sort((a, b) => {
-                        if (!sortKey) return 0;
-                        if (sortKey === 'createdAt') {
-                          const ad = new Date(a.createdAt || 0).getTime();
-                          const bd = new Date(b.createdAt || 0).getTime();
-                          return sortOrder === 'asc' ? ad - bd : bd - ad;
-                        }
-                        const av = (a[sortKey] || '').toString().toLowerCase();
-                        const bv = (b[sortKey] || '').toString().toLowerCase();
-                        if (av < bv) return sortOrder === 'asc' ? -1 : 1;
-                        if (av > bv) return sortOrder === 'asc' ? 1 : -1;
-                        return 0;
-                      })
-                      .map((user) => (
-                      <TableRow key={user._id}>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{user.firstName} {user.lastName}</span>
-                            <span className="text-xs text-muted-foreground">{user.email}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                            <span className="capitalize bg-muted/20 px-2 py-1 rounded text-xs font-medium text-muted-foreground">
-                            {user.role}
-                          </span>
-                        </TableCell>
-                        <TableCell>{user.department || '-'}</TableCell>
-                        <TableCell>
-                          <Select
-                            value={user.managerId?._id || ''}
-                            onValueChange={(val) => updateUserMutation.mutate({ id: user._id, data: { managerId: val || null } })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue>{user.managerId ? `${user.managerId.firstName} ${user.managerId.lastName}` : 'Unassigned'}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">Unassigned</SelectItem>
-                              {managersList?.map((m) => (
-                                <SelectItem value={m._id} key={m._id}>{m.firstName} {m.lastName}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </TableCell>
-                        <TableCell>
-                            <div className="flex gap-2 text-sm">
-                            <span className="text-blue-600 font-medium" title="Vacation">{user.leaveBalance?.vacation || 0}</span>
-                            <span className="text-muted-foreground">|</span>
-                            <span className="text-red-600 font-medium" title="Sick">{user.leaveBalance?.sick || 0}</span>
-                            <span className="text-muted-foreground">|</span>
-                            <span className="text-green-600 font-medium" title="Casual">{user.leaveBalance?.casual || 0}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm text-muted-foreground">{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : '-'}</div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                              <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setIsEditDialogOpen(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                              <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 hover:text-red-300 hover:bg-red-900/10"
-                              onClick={() => handleDeleteUser(user._id)}
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="flex items-center justify-between pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setUserPage(Math.max(1, userPage - 1))}
-                  disabled={userPage === 1}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">Page {userPage} of {totalPages}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setUserPage(Math.min(totalPages, userPage + 1))}
-                  disabled={userPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Users tab moved to the Admin Users page */}
 
           {/* Holidays Tab */}
           {activeTab === 'holidays' && (
@@ -752,7 +417,7 @@ const AdminDashboard = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-600 hover:text-red-300 hover:bg-red-900/10"
+                              className="text-destructive-foreground hover:bg-muted/40"
                               onClick={() => handleDeleteHoliday(holiday._id)}
                             >
                               Delete
@@ -769,210 +434,11 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Create User Dialog */}
-      <Dialog open={isCreateUserDialogOpen} onOpenChange={setIsCreateUserDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>Add a new employee to the system. They will receive an email with login details.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateUser}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" name="firstName" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" name="lastName" required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Initial Password</Label>
-                <Input id="password" name="password" type="password" required minLength={6} />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <Select name="role" defaultValue="employee">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="employee">Employee</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="department">Department</Label>
-                  <Input id="department" name="department" />
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsCreateUserDialogOpen(false)}>Cancel</Button>
-              <Button type="submit">Create User</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      {/* View User Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
-            <DialogDescription>View user details and activity.</DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <div className="space-y-4 py-2">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">{selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}</div>
-                <div>
-                  <p className="font-semibold">{selectedUser.firstName} {selectedUser.lastName}</p>
-                  <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">Role</p>
-                  <p className="font-medium">{selectedUser.role}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Department</p>
-                  <p className="font-medium">{selectedUser.department || '-'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Manager</p>
-                  <p className="font-medium">{selectedUser.managerId ? `${selectedUser.managerId.firstName} ${selectedUser.managerId.lastName}` : '-'}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Joined</p>
-                  <p className="font-medium">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              <div className="border-t pt-4">
-                <p className="text-xs text-muted-foreground">Leave Balance</p>
-                <div className="flex gap-4 mt-2">
-                  <div className="text-xs text-muted-foreground">Vacation: <span className="font-medium">{selectedUser.leaveBalance?.vacation || 0}</span></div>
-                  <div className="text-xs text-muted-foreground">Sick: <span className="font-medium">{selectedUser.leaveBalance?.sick || 0}</span></div>
-                  <div className="text-xs text-muted-foreground">Casual: <span className="font-medium">{selectedUser.leaveBalance?.casual || 0}</span></div>
-                </div>
-              </div>
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium">Recent Activity</p>
-                <div>
-                  <div className="text-xs text-muted-foreground">Last login: {new Date(userActivity?.user?.lastLogin || selectedUser?.lastLogin || 0).toLocaleString()}</div>
-                  <div className="mt-2 space-y-2">
-                    {(userActivity?.recentLogins?.length || 0) > 0 && (
-                      <div>
-                        <p className="text-sm font-semibold">Logins</p>
-                        <ul className="text-xs text-muted-foreground list-disc pl-5">
-                          {userActivity.recentLogins.map((l) => (
-                            <li key={l._id}>{new Date(l.createdAt).toLocaleString()}{l.ip ? ` • ${l.ip}` : ''}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {(userActivity?.recentLeaves?.length || 0) > 0 && (
-                      <div>
-                        <p className="text-sm font-semibold mt-2">Recent Leaves</p>
-                        <ul className="text-xs text-muted-foreground list-disc pl-5">
-                          {userActivity.recentLeaves.map((l) => (
-                            <li key={l._id}>{l.leaveType} • {new Date(l.startDate).toLocaleDateString()} - {new Date(l.endDate).toLocaleDateString()} • {l.status}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>Close</Button>
-            <Button onClick={() => { setIsViewDialogOpen(false); setIsEditDialogOpen(true); }}>Edit</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Edit User Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user details and leave balances.</DialogDescription>
-          </DialogHeader>
-          {selectedUser && (
-            <form onSubmit={handleUpdateUser}>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-firstName">First Name</Label>
-                    <Input id="edit-firstName" name="firstName" defaultValue={selectedUser.firstName} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-lastName">Last Name</Label>
-                    <Input id="edit-lastName" name="lastName" defaultValue={selectedUser.lastName} />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-email">Email</Label>
-                  <Input id="edit-email" name="email" type="email" defaultValue={selectedUser.email} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-role">Role</Label>
-                    <Select name="role" defaultValue={selectedUser.role}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="employee">Employee</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-department">Department</Label>
-                    <Input id="edit-department" name="department" defaultValue={selectedUser.department} />
-                  </div>
-                </div>
-                
-                <div className="border-t pt-4 mt-2">
-                  <Label className="mb-2 block text-sm font-semibold text-muted-foreground">Leave Balance Adjustment</Label>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="vacation" className="text-xs text-muted-foreground">Vacation</Label>
-                      <Input id="vacation" name="vacation" type="number" defaultValue={selectedUser.leaveBalance?.vacation || 0} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="sick" className="text-xs text-muted-foreground">Sick</Label>
-                      <Input id="sick" name="sick" type="number" defaultValue={selectedUser.leaveBalance?.sick || 0} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="casual" className="text-xs text-muted-foreground">Casual</Label>
-                      <Input id="casual" name="casual" type="number" defaultValue={selectedUser.leaveBalance?.casual || 0} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
+
+
+
 
       {/* Create Holiday Dialog */}
       <Dialog open={isCreateHolidayDialogOpen} onOpenChange={setIsCreateHolidayDialogOpen}>
@@ -1055,7 +521,7 @@ const AdminDashboard = () => {
                   <Input id="accrue-casual" name="casual" type="number" step="0.5" defaultValue="0" />
                 </div>
               </div>
-              <p className="text-sm text-yellow-300 bg-yellow-900/20 p-2 rounded border border-yellow-700/30">
+              <p className="text-sm text-warning-foreground bg-warning-muted p-2 rounded border border-warning">
                 Warning: This action will add these amounts to the current balance of <strong>every user</strong> in the system.
               </p>
             </div>
@@ -1070,11 +536,10 @@ const AdminDashboard = () => {
     <ConfirmDialog
       open={!!deleteTarget}
       onOpenChange={() => setDeleteTarget(null)}
-      title={deleteTarget?.type === 'user' ? 'Delete User' : 'Delete Holiday'}
-      description={`Are you sure you want to delete this ${deleteTarget?.type === 'user' ? 'user' : 'holiday'}?`}
+      title={deleteTarget?.type === 'holiday' ? 'Delete Holiday' : 'Confirm action'}
+      description={`Are you sure you want to delete this ${deleteTarget?.type === 'holiday' ? 'holiday' : 'item'}?`}
       onConfirm={() => {
         if (!deleteTarget) return;
-        if (deleteTarget.type === 'user') deleteUserMutation.mutate(deleteTarget.id);
         if (deleteTarget.type === 'holiday') deleteHolidayMutation.mutate(deleteTarget.id);
         setDeleteTarget(null);
       }}

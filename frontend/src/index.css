@@ -1,3 +1,9 @@
+.text-danger { color: hsl(var(--danger)); }
+.text-accent { color: hsl(var(--accent)); }
+.text-primary { color: hsl(var(--primary)); }
+.text-success { color: hsl(var(--success)); }
+.text-warning { color: hsl(var(--warning)); }
+.text-destructive { color: hsl(var(--destructive)); }
 @import "tailwindcss";
 
 @tailwind base;
@@ -20,12 +26,25 @@
     --muted: 188 14% 92%; /* Alabaster */
     --muted-foreground: 210 10% 40%;
     --accent: 174 25% 25%; /* Granite-ish */
-    --accent-foreground: 210 10% 8%;
+    --accent-foreground: 210 10% 98%;
     --destructive: 0 62% 50%;
-    --destructive-foreground: 210 10% 10%;
+    --destructive-foreground: 210 10% 98%;
     --border: 188 14% 86%;
     --input: 188 14% 86%;
     --ring: 156 97% 56%; /* Spring green ring for focus */
+    /* Semantic colors for states (success, warning, info, danger) */
+    --success: 145 63% 41%; /* green-500-ish */
+    --success-foreground: 210 10% 8%;
+    --success-bg: 145 63% 94%;
+    --warning: 42 100% 50%; /* yellow-500-ish */
+    --warning-foreground: 210 10% 8%;
+    --warning-bg: 42 100% 94%;
+    --info: 210 80% 56%; /* blue-ish */
+    --info-foreground: 210 10% 8%;
+    --info-bg: 210 80% 94%;
+    --danger: 0 75% 45%; /* red-500-ish */
+    --danger-foreground: 210 10% 8%;
+    --danger-bg: 0 75% 95%;
     --radius: 0.75rem;
   }
 
@@ -38,7 +57,7 @@
     --popover: 160 8% 16%;
     --popover-foreground: 210 10% 98%;
     --primary: 156 97% 56%; /* Spring Green accent remains vibrant */
-    --primary-foreground: 210 10% 98%;
+    --primary-foreground: 210 10% 8%;
     --secondary: 180 10% 25%;
     --secondary-foreground: 210 10% 98%;
     --muted: 160 10% 20%;
@@ -50,6 +69,19 @@
     --border: 160 8% 20%;
     --input: 160 8% 18%;
     --ring: 156 97% 56%; /* Spring green ring */
+    /* Semantic colors for states (success, warning, info, danger) */
+    --success: 145 63% 41%; /* green-500-ish */
+    --success-foreground: 210 10% 98%;
+    --success-bg: 145 63% 16%;
+    --warning: 42 100% 50%; /* yellow-500-ish */
+    --warning-foreground: 210 10% 98%;
+    --warning-bg: 42 100% 12%;
+    --info: 210 80% 56%; /* blue-ish */
+    --info-foreground: 210 10% 98%;
+    --info-bg: 210 80% 16%;
+    --danger: 0 75% 45%; /* red-500-ish */
+    --danger-foreground: 210 10% 98%;
+    --danger-bg: 0 75% 16%;
   }
 }
 
@@ -242,6 +274,35 @@ body {
 .text-destructive-foreground {
   color: hsl(var(--destructive-foreground));
 }
+
+.bg-success { background-color: hsl(var(--success)); }
+.text-success-foreground { color: hsl(var(--success-foreground)); }
+.bg-success-muted { background-color: hsl(var(--success-bg)); }
+
+.bg-warning { background-color: hsl(var(--warning)); }
+.text-warning-foreground { color: hsl(var(--warning-foreground)); }
+.bg-warning-muted { background-color: hsl(var(--warning-bg)); }
+
+.bg-info { background-color: hsl(var(--info)); }
+.text-info-foreground { color: hsl(var(--info-foreground)); }
+.bg-info-muted { background-color: hsl(var(--info-bg)); }
+
+/* add color utilities for text tokens (useful for icons & inline text color) */
+.text-info { color: hsl(var(--info)); }
+.text-success { color: hsl(var(--success)); }
+.text-warning { color: hsl(var(--warning)); }
+.text-danger { color: hsl(var(--danger)); }
+.text-accent { color: hsl(var(--accent)); }
+.text-primary { color: hsl(var(--primary)); }
+
+.bg-danger { background-color: hsl(var(--danger)); }
+.text-danger-foreground { color: hsl(var(--danger-foreground)); }
+.bg-danger-muted { background-color: hsl(var(--danger-bg)); }
+
+.border-success { border-color: hsl(var(--success)); }
+.border-warning { border-color: hsl(var(--warning)); }
+.border-info { border-color: hsl(var(--info)); }
+.border-danger { border-color: hsl(var(--danger)); }
 
 .border-input {
   border-color: hsl(var(--input));

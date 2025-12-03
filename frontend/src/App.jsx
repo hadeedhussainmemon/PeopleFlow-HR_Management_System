@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useAuth } from './hooks/useAuth';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
 import TeamRequests from './pages/TeamRequests';
 import ApplyLeave from './pages/ApplyLeave';
 import Dashboard from './pages/Dashboard';
@@ -50,7 +51,10 @@ const App = () => {
                     <Route path="/team-requests" element={<TeamRequests />} />
                   )}
                   {user?.role === 'admin' ? (
-                    <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                    <>
+                      <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                      <Route path="/admin/users" element={<AdminUsers />} />
+                    </>
                   ) : (
                     <Route path="/admin-dashboard" element={<Navigate to="/" replace />} />
                   )}

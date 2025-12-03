@@ -108,12 +108,12 @@ const TeamRequests = () => {
     <div>
       <h1 className="text-3xl font-bold mb-4 text-foreground">Team Requests</h1>
             {error && (
-              <div className="mb-4 p-3 bg-red-900/20 border border-red-700/30 text-red-300 rounded">
+              <div className="mb-4 p-3 bg-danger-muted border border-danger text-danger-foreground rounded">
                 {error}
               </div>
             )}
             {success && (
-              <div className="mb-4 p-3 bg-green-900/20 border border-green-700/30 text-green-300 rounded">
+              <div className="mb-4 p-3 bg-success-muted border border-success text-success-foreground rounded">
                 {success}
               </div>
             )}
@@ -158,7 +158,7 @@ const TeamRequests = () => {
                         <p><b>Dates:</b> {new Date(selectedLeave.startDate).toLocaleDateString()} - {new Date(selectedLeave.endDate).toLocaleDateString()}</p>
                         <p><b>Type:</b> {selectedLeave.leaveType}</p>
                         <p><b>Reason:</b> {selectedLeave.reason}</p>
-                        {conflictWarning && <p className="text-red-500 font-bold mt-4">{conflictWarning}</p>}
+                        {conflictWarning && <p className="text-destructive font-bold mt-4">{conflictWarning}</p>}
                       </div>
                     )}
                     <DialogFooter>

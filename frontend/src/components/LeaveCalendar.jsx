@@ -51,25 +51,25 @@ const LeaveCalendar = () => {
   const getDayClassName = (date) => {
     // Holiday
     if (holidayDates.some(h => isSameDay(h.date, date))) {
-      return 'bg-red-900/20 text-red-300 font-bold rounded-full hover:bg-red-900/30';
+      return 'bg-danger-muted text-danger-foreground font-bold rounded-full';
     }
 
     // Weekly holiday: Sunday
     if (date.getDay && date.getDay() === 0) {
-      return 'bg-red-900/20 text-red-300 font-bold rounded-full hover:bg-red-900/30';
+      return 'bg-danger-muted text-danger-foreground font-bold rounded-full';
     }
     
     // Approved Leaves
     const approved = approvedLeaves.find(l => isSameDay(l.date, date));
     if (approved) {
-      if (approved.type === 'sick') return 'bg-rose-900/20 text-rose-300 font-bold rounded-full hover:bg-rose-900/30';
-      if (approved.type === 'casual') return 'bg-blue-900/20 text-blue-300 font-bold rounded-full hover:bg-blue-900/30';
-      return 'bg-green-900/20 text-green-300 font-bold rounded-full hover:bg-green-900/30'; // vacation
+      if (approved.type === 'sick') return 'bg-danger-muted text-danger-foreground font-bold rounded-full';
+      if (approved.type === 'casual') return 'bg-info-muted text-info-foreground font-bold rounded-full';
+      return 'bg-success-muted text-success-foreground font-bold rounded-full'; // vacation
     }
 
     // Pending Leaves
     if (pendingLeaves.some(l => isSameDay(l.date, date))) {
-      return 'bg-yellow-900/20 text-yellow-300 font-bold rounded-full hover:bg-yellow-900/30';
+      return 'bg-warning-muted text-warning-foreground font-bold rounded-full';
     }
 
     return undefined;
@@ -108,23 +108,23 @@ const LeaveCalendar = () => {
           />
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mt-6 w-full max-w-[280px]">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-900/20 rounded-full border border-green-700/20"></div> 
+              <div className="w-3 h-3 bg-success-muted rounded-full border border-success"></div> 
               <span>Vacation</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-rose-900/20 rounded-full border border-rose-700/20"></div> 
+              <div className="w-3 h-3 bg-danger-muted rounded-full border border-danger"></div> 
               <span>Sick</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-900/20 rounded-full border border-blue-700/20"></div> 
+              <div className="w-3 h-3 bg-info-muted rounded-full border border-info"></div> 
               <span>Casual</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-900/20 rounded-full border border-yellow-700/20"></div> 
+              <div className="w-3 h-3 bg-warning-muted rounded-full border border-warning"></div> 
               <span>Pending</span>
             </div>
             <div className="flex items-center gap-2 col-span-2">
-              <div className="w-3 h-3 bg-red-900/20 rounded-full border border-red-700/20"></div> 
+              <div className="w-3 h-3 bg-danger-muted rounded-full border border-danger"></div> 
               <span>Holiday (Public / Sundays)</span>
             </div>
           </div>

@@ -7,29 +7,29 @@ import {
 
 const colorMap = {
   blue: {
-    bg: 'bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30',
-    text: 'text-blue-200',
-    iconBg: 'bg-blue-500/30 text-blue-300'
+    bg: 'bg-info-muted border border-info',
+    text: 'text-info-foreground',
+    iconBg: 'bg-info-muted text-info-foreground'
   },
   red: {
-    bg: 'bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30',
-    text: 'text-red-200',
-    iconBg: 'bg-red-500/30 text-red-300'
+    bg: 'bg-danger-muted border border-danger',
+    text: 'text-destructive-foreground',
+    iconBg: 'bg-danger-muted text-danger-foreground'
   },
   cyan: {
-    bg: 'bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 border border-cyan-500/30',
-    text: 'text-cyan-200',
-    iconBg: 'bg-cyan-500/30 text-cyan-300'
+    bg: 'bg-info-muted border border-info',
+    text: 'text-info-foreground',
+    iconBg: 'bg-info-muted text-info-foreground'
   },
   green: {
-    bg: 'bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30',
-    text: 'text-green-200',
-    iconBg: 'bg-green-500/30 text-green-300'
+    bg: 'bg-success-muted border border-success',
+    text: 'text-success-foreground',
+    iconBg: 'bg-success-muted text-success-foreground'
   },
   gray: {
-    bg: 'bg-gradient-to-br from-gray-700/20 to-gray-800/20 border border-slate-700/30',
+    bg: 'bg-card border border-border',
     text: 'text-muted-foreground',
-    iconBg: 'bg-slate-700/30 text-muted-foreground'
+    iconBg: 'bg-muted/20 text-muted-foreground'
   }
 };
 

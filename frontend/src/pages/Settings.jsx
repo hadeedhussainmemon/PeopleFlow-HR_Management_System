@@ -123,7 +123,7 @@ const Settings = () => {
       </div>
 
       {message.text && (
-        <div className={`p-4 rounded ${message.type === 'success' ? 'bg-green-900/20 text-green-300 border border-green-700/30' : 'bg-red-900/20 text-red-300 border border-red-700/30'}`}>
+        <div className={`p-4 rounded ${message.type === 'success' ? 'bg-success-muted text-success-foreground border border-success' : 'bg-danger-muted text-danger-foreground border border-danger'}`}>
           {message.text}
         </div>
       )}

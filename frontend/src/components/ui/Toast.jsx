@@ -30,7 +30,7 @@ export const ToastProvider = ({ children }) => {
           <div
             key={t.id}
             className={`max-w-sm w-full rounded-lg border p-3 shadow-md flex items-start gap-3 bg-card ${
-              t.variant === 'error' ? 'border-red-700/30' : t.variant === 'success' ? 'border-green-700/30' : 'border-slate-700/30'
+              t.variant === 'error' ? 'border-danger' : t.variant === 'success' ? 'border-success' : 'border-border'
             }`}
           >
             <div className="flex-1">

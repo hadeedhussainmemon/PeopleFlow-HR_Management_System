@@ -42,6 +42,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   if (user?.role === 'admin') {
     navItems.push({ path: '/admin-dashboard', label: 'Admin Dashboard', icon: ShieldCheck });
+    navItems.push({ path: '/admin/users', label: 'Users', icon: Users });
   }
 
   return (
@@ -85,7 +86,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
                 flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
                 ${isActive(item.path) 
                   ? 'bg-primary text-primary-foreground shadow-sm' 
-                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-muted/40 hover:text-foreground'
                 }
               `}
             >

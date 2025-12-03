@@ -65,9 +65,9 @@ const Dashboard = () => {
 
   // Chart Data
   const balanceData = [
-    { name: 'Vacation', value: user?.leaveBalance?.vacation || 0, color: '#3B82F6' },
-    { name: 'Sick', value: user?.leaveBalance?.sick || 0, color: '#EF4444' },
-    { name: 'Casual', value: user?.leaveBalance?.casual || 0, color: '#10B981' },
+    { name: 'Vacation', value: user?.leaveBalance?.vacation || 0, color: 'hsl(var(--info))' },
+    { name: 'Sick', value: user?.leaveBalance?.sick || 0, color: 'hsl(var(--danger))' },
+    { name: 'Casual', value: user?.leaveBalance?.casual || 0, color: 'hsl(var(--success))' },
   ].filter(d => d.value > 0);
 
   // Process leaves for bar chart (Leaves by Month)
@@ -84,6 +84,15 @@ const Dashboard = () => {
   return (
     <>
     <div className="space-y-8">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <nav className="flex items-center gap-2" aria-label="Dashboard quick actions">
+          <Button asChild size="sm"><Link to="/apply-leave">Apply For Leave</Link></Button>
+          <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard?.writeText(window.location.href); toast({title:'Link copied', description:'Dashboard link copied', variant:'success'})}}>Share</Button>
+        </nav>
+        <div className="flex gap-3 items-center">
+          <div className="text-sm text-muted-foreground">Welcome back, <strong className="text-foreground">{user?.firstName}</strong></div>
+        </div>
+      </div>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
@@ -140,7 +149,7 @@ const Dashboard = () => {
 
       {/* Charts Section */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="glass-card border-slate-700/50">
+        <Card className="glass-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-foreground">
               <PieChartIcon className="h-5 w-5 text-muted-foreground" />
@@ -148,7 +157,7 @@ const Dashboard = () => {
             </CardTitle>
             <CardDescription className="text-muted-foreground">Your remaining leave days by type.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+            <CardContent className="h-[300px] border-border">
             {balanceData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -177,7 +186,7 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-slate-700/50">
+        <Card className="glass-card border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-foreground">
               <BarChartIcon className="h-5 w-5 text-muted-foreground" />
@@ -185,7 +194,7 @@ const Dashboard = () => {
             </CardTitle>
             <CardDescription className="text-muted-foreground">Approved leave days taken this year.</CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+            <CardContent className="h-[300px] border-border">
             {barChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barChartData}>
@@ -193,7 +202,7 @@ const Dashboard = () => {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="days" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="days" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -207,51 +216,45 @@ const Dashboard = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4 space-y-4">
-          <Card className="glass-card border-slate-700/50">
+          <Card className="glass-card border-border">
             <CardHeader>
               <CardTitle className="text-foreground">Recent Leave Requests</CardTitle>
                   <CardDescription className="text-muted-foreground">
                     You have made {myLeaves.length} leave requests total.
               </CardDescription>
             </CardHeader>
-                <CardContent className="overflow-x-auto">
-              <div className="space-y-8">
+              <CardContent className="overflow-x-auto border-border">
+              <div className="space-y-4">
                 {recentLeaves.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No leave requests found.</p>
                 ) : (
-                  recentLeaves.map((leave) => (
-                    <div key={leave._id} className="flex items-center">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none capitalize">
-                          {leave.leaveType} Leave
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div className="ml-auto font-medium flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          leave.status === 'approved' ? 'bg-green-800/30 text-green-300' :
-                          leave.status === 'rejected' ? 'bg-red-800/30 text-red-300' :
-                          leave.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' :
-                          'bg-yellow-800/30 text-yellow-300'
-                        }`}>
-                          {leave.status}
-                        </span>
-                        {leave.status === 'pending' && (
-                            <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 w-6 p-0 text-red-500 hover:text-red-300 hover:bg-red-900/10"
-                            onClick={() => requestCancel(leave._id)}
-                            title="Cancel Request"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  ))
+                  <ul role="list" className="divide-y divide-muted/10">
+                    {recentLeaves.map((leave) => (
+                      <li key={leave._id} className="flex items-center gap-4 py-3">
+                        <div className="w-10 h-10 flex items-center justify-center rounded-full bg-primary/12 text-primary font-bold">{leave.leaveType?.[0]?.toUpperCase()}</div>
+                        <div className="flex-1">
+                          <div className="flex items-baseline gap-2">
+                            <p className="text-sm font-semibold capitalize text-foreground">{leave.leaveType} Leave</p>
+                            <p className="text-xs text-muted-foreground">• {new Date(leave.startDate).toLocaleDateString()} - {new Date(leave.endDate).toLocaleDateString()}</p>
+                          </div>
+                          {leave.reason && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{leave.reason}</p>}
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            leave.status === 'approved' ? 'bg-success-muted text-success-foreground' :
+                            leave.status === 'rejected' ? 'bg-danger-muted text-danger-foreground' :
+                            leave.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' :
+                            'bg-warning-muted text-warning-foreground'
+                          }`}>{leave.status}</span>
+                          {leave.status === 'pending' && (
+                            <Button variant="ghost" size="sm" onClick={() => requestCancel(leave._id)} title="Cancel Request" aria-label={`Cancel request for ${leave.leaveType} leave starting ${new Date(leave.startDate).toLocaleDateString()}`}>
+                              <XCircle className="h-4 w-4 text-destructive" aria-hidden="true" />
+                            </Button>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </CardContent>
@@ -261,7 +264,7 @@ const Dashboard = () => {
         <div className="col-span-3 space-y-4">
           <LeaveCalendar />
 
-          <Card className="glass-card border-slate-700/50">
+          <Card className="glass-card border-border">
             <CardHeader>
               <CardTitle className="text-foreground">Upcoming Holidays</CardTitle>
                   <CardDescription className="text-muted-foreground">Next 3 holidays.</CardDescription>

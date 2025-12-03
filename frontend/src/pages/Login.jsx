@@ -44,7 +44,7 @@ const Login = () => {
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="w-72 h-72 login-orb rounded-full blur-3xl opacity-60 translate-x-[-20%] translate-y-[-10%] animate-[gradient-move_10s_linear_infinite]" />
       </div>
-      <Card className="w-[380px] max-w-[92%] glass-card login-card border-slate-700/50 transform transition-transform hover:scale-[1.01]">
+      <Card className="w-[380px] max-w-[92%] glass-card login-card border-border transform transition-transform hover:scale-[1.01]">
         <CardHeader>
           <div className="flex items-center justify-center">
             <div className="w-20 h-20 rounded-full flex items-center justify-center shadow-inner mb-2" style={{ backgroundColor: 'hsl(var(--primary) / 0.12)' }}>
@@ -59,7 +59,7 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <CardContent>
             {error && (
-              <div role="alert" aria-live="polite" className="mb-4 p-3 bg-red-900/30 border border-red-700 text-red-300 rounded">
+              <div role="alert" aria-live="polite" className="mb-4 p-3 bg-danger-muted border border-danger text-danger-foreground rounded">
                 {error}
               </div>
             )}
