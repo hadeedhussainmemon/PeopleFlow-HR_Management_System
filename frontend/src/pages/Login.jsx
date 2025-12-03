@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { User, Lock } from 'lucide-react';
+import { User, Lock, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -21,6 +21,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -70,7 +71,10 @@ const Login = () => {
               </div>
               <div className="relative flex flex-col space-y-1.5 floating-label">
                 <div className="absolute left-3 top-2.5 pointer-events-none"><Lock className="h-4 w-4 text-muted-foreground" /></div>
-                <Input id="password" type="password" placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input pl-10" aria-label="Password" />
+                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input pl-10" aria-label="Password" aria-describedby="passwordHelp" />
+                <button type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} className="absolute right-3 top-2.5" onClick={() => setShowPassword((v) => !v)}>
+                  {showPassword ? <EyeOff className="h-4 w-4 text-muted-foreground" /> : <Eye className="h-4 w-4 text-muted-foreground" />}
+                </button>
                 <Label htmlFor="password" className="login-label">Password</Label>
               </div>
               <div className="flex items-center space-x-2">
