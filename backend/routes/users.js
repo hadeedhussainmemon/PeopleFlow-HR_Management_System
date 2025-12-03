@@ -7,8 +7,9 @@ const {
   updateUser, 
   deleteUser,
   getDashboardStats,
-  accrueLeaves
-  , exportUsersCSV
+  accrueLeaves,
+  exportUsersCSV,
+  getUserActivity
 } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 const { admin } = require('../middleware/roleMiddleware');
