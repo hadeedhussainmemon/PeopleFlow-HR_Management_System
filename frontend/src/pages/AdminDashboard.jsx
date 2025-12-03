@@ -834,7 +834,7 @@ const AdminDashboard = () => {
           {selectedUser && (
             <div className="space-y-4 py-2">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">{selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}</div>
+                <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">{selectedUser.firstName?.[0]}{selectedUser.lastName?.[0]}</div>
                 <div>
                   <p className="font-semibold">{selectedUser.firstName} {selectedUser.lastName}</p>
                   <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
