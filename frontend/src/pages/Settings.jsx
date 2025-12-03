@@ -105,17 +105,17 @@ const Settings = () => {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+      <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
 
       <div className="flex space-x-4 border-b">
         <button
-          className={`pb-2 px-4 ${activeTab === 'profile' ? 'border-b-2 border-blue-600 font-medium' : 'text-gray-500'}`}
+          className={`pb-2 px-4 ${activeTab === 'profile' ? 'border-b-2 border-blue-600 font-medium' : 'text-muted-foreground'}`}
           onClick={() => setActiveTab('profile')}
         >
           Profile
         </button>
         <button
-          className={`pb-2 px-4 ${activeTab === 'security' ? 'border-b-2 border-blue-600 font-medium' : 'text-gray-500'}`}
+          className={`pb-2 px-4 ${activeTab === 'security' ? 'border-b-2 border-blue-600 font-medium' : 'text-muted-foreground'}`}
           onClick={() => setActiveTab('security')}
         >
           Security
@@ -123,7 +123,7 @@ const Settings = () => {
       </div>
 
       {message.text && (
-        <div className={`p-4 rounded ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+        <div className={`p-4 rounded ${message.type === 'success' ? 'bg-green-900/20 text-green-300 border border-green-700/30' : 'bg-red-900/20 text-red-300 border border-red-700/30'}`}>
           {message.text}
         </div>
       )}
@@ -157,7 +157,7 @@ const Settings = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" value={profileData.email} disabled className="bg-gray-100" />
+                <Input id="email" value={profileData.email} disabled className="bg-muted/40" />
               </div>
 
               <div className="space-y-2">
@@ -173,11 +173,11 @@ const Settings = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="department">Department</Label>
-                  <Input id="department" value={profileData.department} disabled className="bg-gray-100" />
+                  <Input id="department" value={profileData.department} disabled className="bg-muted/40" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Input id="role" value={profileData.role} disabled className="bg-gray-100" />
+                  <Input id="role" value={profileData.role} disabled className="bg-muted/40" />
                 </div>
               </div>
 

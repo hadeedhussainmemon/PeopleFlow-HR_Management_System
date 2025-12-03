@@ -106,23 +106,24 @@ const TeamRequests = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-4">Team Requests</h1>
+      <h1 className="text-3xl font-bold mb-4 text-foreground">Team Requests</h1>
             {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              <div className="mb-4 p-3 bg-red-900/20 border border-red-700/30 text-red-300 rounded">
                 {error}
               </div>
             )}
             {success && (
-              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+              <div className="mb-4 p-3 bg-green-900/20 border border-green-700/30 text-green-300 rounded">
                 {success}
               </div>
             )}
             {!isLoading && pendingLeaves?.length === 0 && (
-              <div className="p-4 bg-gray-100 rounded text-gray-600 mb-4">
+              <div className="p-4 bg-muted/40 rounded text-muted-foreground mb-4">
                 No pending leave requests at the moment.
               </div>
             )}
-      <Table>
+      <div className="overflow-x-auto">
+        <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Employee</TableHead>
@@ -170,7 +171,8 @@ const TeamRequests = () => {
             </TableRow>
           ))}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
       <div className="flex items-center gap-2 mt-4">
         <Button variant="outline" onClick={() => setPagePending(Math.max(1, pagePending - 1))}>Prev Pending</Button>
         <Button variant="outline" onClick={() => setPagePending(pagePending + 1)}>Next Pending</Button>

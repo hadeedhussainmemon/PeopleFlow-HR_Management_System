@@ -33,6 +33,12 @@ The application features a secure authentication system using JSON Web Tokens (J
 -   **Conflict Warning System:** Managers are alerted if a new leave request overlaps with an existing approved leave within the same team.
 -   **Admin Panel:** Administrators can add new users and define public holidays for the entire organization.
 -   **Modern UI:** A clean, responsive, and consistent user interface built with `shadcn/ui`.
+ -   **Recent Additions:**
+     - **Dark Mode (default):** The frontend now defaults to a modern glassy dark theme for a polished professional look.
+     - **Last Login & Activity:** The backend now records `lastLogin` and admin can view mini activity timelines (login events & recent leaves) from Admin Dashboard.
+     - **In-line manager assignment:** Admins can assign managers to users inline from the users table.
+    - **CSV Export:** Admins can export the currently displayed users list to CSV for reporting.
+    - **Animated Login Page:** The login page has an updated, polished, animated design with floating labels, gradient accents, and subtle micro-interactions.
 
 ## 4. Application Flow & User Journeys
 
@@ -139,6 +145,8 @@ const holidaySchema = new mongoose.Schema({
 | `POST` | `/api/auth/login`     | Public        | Authenticates a user and returns a JWT cookie.    |
 | `POST` | `/api/auth/logout`    | Authenticated | Clears the JWT cookie to log the user out.        |
 | `GET`  | `/api/auth/me`        | Authenticated | Returns the profile of the currently logged-in user. |
+| `GET`  | `/api/users`          | Admin         | Fetches a paginated list of users; supports `page`, `limit`, `search`, `role`, `sort`, `order` query params. |
+| `GET`  | `/api/users/export`   | Admin         | Streams a CSV export of all users (server-side streaming). |
 | `POST` | `/api/users`          | Admin         | Creates a new user (by an admin).                 |
 | `POST` | `/api/leaves/apply`   | Authenticated | Submits a new leave request.                      |
 | `GET`  | `/api/leaves/my-leaves` | Authenticated | Fetches all leave requests for the current user.  |
@@ -147,6 +155,16 @@ const holidaySchema = new mongoose.Schema({
 | `PATCH`| `/api/leaves/:id/status`| Manager/Admin | Approves or rejects a leave request.              |
 | `POST` | `/api/holidays`       | Admin         | Creates a new public holiday.                     |
 | `GET`  | `/api/holidays`       | Authenticated | Fetches all public holidays.                      |
+| `GET`  | `/api/users/:id/activity` | Admin     | Fetches last logins and recent leaves for the user (activity timeline). |
+
+
+## 6.1 New Admin Features (Quick Overview)
+
+1.  **User Activity**: Admins can open a user's details and view recent login events and recent leaves for auditing.
+2.  **Last Login**: The users table includes a `Last Login` column for a quick view of inactivity or recent logins.
+3.  **Assign Manager inline**: Admins can assign or reassign a manager to any user inline from the users table.
+4.  **CSV Export**: Admins can export users on the current page to CSV for quick reporting and offline review. For large datasets, there's also a server-side `Export All` which streams a CSV for all users without loading them in memory (admin-only endpoint: `GET /api/users/export`).
+5.  **Dark Theme**: The app now defaults to a modern glassy dark theme for better readability and a professional aesthetic. Users can switch between light and dark themes via the new toggle in the top-right corner; this preference is persisted in `localStorage`.
 
 
 ## 7. Getting Started

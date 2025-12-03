@@ -38,27 +38,37 @@ const Login = () => {
   };
 
   return (
-    <div className="flex items-center justify-center h-screen">
-      <Card className="w-[350px]">
+    <div className="flex items-center justify-center h-screen animated-gradient-login">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="w-72 h-72 login-orb rounded-full blur-3xl opacity-60 translate-x-[-20%] translate-y-[-10%] animate-[gradient-move_10s_linear_infinite]" />
+      </div>
+      <Card className="w-[380px] max-w-[92%] glass-card login-card border-slate-700/50 transform transition-transform hover:scale-[1.01]">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your credentials to access your account.</CardDescription>
+          <div className="flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-white/70 flex items-center justify-center shadow-inner mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-rose-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 2a4 4 0 100 8 4 4 0 000-8zM2 16a8 8 0 0116 0H2z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+          <CardTitle>Welcome back</CardTitle>
+          <CardDescription>Sign in to continue to PeopleFlow.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent>
             {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+              <div className="mb-4 p-3 bg-red-900/30 border border-red-700 text-red-300 rounded">
                 {error}
               </div>
             )}
             <div className="grid w-full items-center gap-4">
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <div className="flex flex-col space-y-1.5 floating-label">
+                <Input id="email" type="email" placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} className="bg-transparent login-input" />
+                <Label htmlFor="email" className="login-label">Email</Label>
               </div>
-              <div className="flex flex-col space-y-1.5">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <div className="flex flex-col space-y-1.5 floating-label">
+                <Input id="password" type="password" placeholder=" " value={password} onChange={(e) => setPassword(e.target.value)} className="bg-transparent login-input" />
+                <Label htmlFor="password" className="login-label">Password</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <input 
@@ -75,7 +85,19 @@ const Login = () => {
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <div className="flex items-center justify-between w-full text-sm">
+              <div className="flex items-center space-x-2">
+                <input 
+                  id="rememberMeFooter" 
+                  type="checkbox" 
+                  checked={rememberMe} 
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 cursor-pointer"
+                />
+                <Label htmlFor="rememberMeFooter" className="cursor-pointer font-normal">Remember me</Label>
+              </div>
+            </div>
+            <Button type="submit" className="w-full bg-gradient-to-r from-rose-400 to-orange-400 text-white shadow-md hover:scale-105 transition-transform" disabled={loading}>
               {loading ? 'Logging in...' : 'Login'}
             </Button>
           </CardFooter>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -21,7 +21,7 @@ import {
   Menu, 
   X,
   ShieldCheck
-} from 'lucide-react';
+  , Moon, Sun} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {/* Sidebar */}
       <div className={`
-        fixed md:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out
+        fixed md:static inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out glass-card
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
       `}>
@@ -116,13 +116,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   );
 };
 
-const Navbar = ({ onMenuClick }) => {
+const Navbar = ({ onMenuClick, theme, toggleTheme }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
     <header className="h-16 flex items-center justify-between px-4 md:px-6 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-30">
       <div className="flex items-center gap-4">
+        <Button variant="ghost" className="h-8 w-8" onClick={toggleTheme} title="Toggle theme">
+          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+        </Button>
         <Button 
           variant="ghost" 
           size="icon" 
@@ -165,12 +168,42 @@ const Navbar = ({ onMenuClick }) => {
 
 const Layout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState('dark');
+
+  // Persist theme and respect system preference
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored) {
+        setTheme(stored);
+        if (stored === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } else {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light');
+        if (prefersDark) document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    try {
+      localStorage.setItem('theme', newTheme);
+      if (newTheme === 'dark') document.documentElement.classList.add('dark');
+      else document.documentElement.classList.remove('dark');
+    } catch (e) {}
+  };
 
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
       <div className="flex-1 flex flex-col min-w-0 h-screen">
-        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} theme={theme} toggleTheme={toggleTheme} />
         <ToastProvider>
           <main className="flex-1 p-4 md:p-8 overflow-y-auto">
             <div className="max-w-7xl mx-auto">

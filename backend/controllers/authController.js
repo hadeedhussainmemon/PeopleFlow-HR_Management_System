@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const LoginHistory = require('../models/LoginHistory');
 // Helper function to validate email
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -129,6 +130,13 @@ const login = async (req, res) => {
         }
       }
       
+      try {
+        user.lastLogin = new Date();
+        await user.save();
+        await LoginHistory.create({ userId: user._id, ip: req.ip, userAgent: req.get('User-Agent') });
+      } catch (err) {
+        console.error('Failed to record admin login history', err);
+      }
       generateToken(res, user._id, rememberMe);
       return res.json({
         _id: user._id,
@@ -142,6 +150,14 @@ const login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      // update lastLogin and save a login history event
+      try {
+        user.lastLogin = new Date();
+        await user.save();
+        await LoginHistory.create({ userId: user._id, ip: req.ip, userAgent: req.get('User-Agent') });
+      } catch (err) {
+        console.error('Failed to record login history', err);
+      }
       generateToken(res, user._id, rememberMe);
       res.json({
         _id: user._id,

@@ -11,23 +11,27 @@ const getAllUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
     const search = req.query.search || '';
+    const role = req.query.role || '';
+    const sortKeyWhitelist = ['createdAt', 'firstName', 'role', 'department'];
+    const sortKey = sortKeyWhitelist.includes(req.query.sort) ? req.query.sort : 'createdAt';
+    const sortOrder = req.query.order === 'asc' ? 1 : -1;
 
-    const query = search
-      ? {
-          $or: [
-            { firstName: { $regex: search, $options: 'i' } },
-            { lastName: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } },
-            { department: { $regex: search, $options: 'i' } }
-          ]
-        }
-      : {};
+    const query = {};
+    if (role) query.role = role;
+    if (search) {
+      query.$or = [
+        { firstName: { $regex: search, $options: 'i' } },
+        { lastName: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { department: { $regex: search, $options: 'i' } }
+      ];
+    }
 
     const [users, total] = await Promise.all([
       User.find(query)
         .select('-password')
         .populate('managerId', 'firstName lastName')
-        .sort({ createdAt: -1 })
+        .sort({ [sortKey]: sortOrder })
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -57,6 +61,26 @@ const getUserById = async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('Get user by ID error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Get user activity (login history & recent leaves)
+// @route   GET /api/users/:id/activity
+// @access  Private/Admin
+const getUserActivity = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await User.findById(userId).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const LoginHistory = require('../models/LoginHistory');
+    const recentLogins = await LoginHistory.find({ userId }).sort({ createdAt: -1 }).limit(10).lean();
+    const recentLeaves = await LeaveRequest.find({ employeeId: userId }).sort({ createdAt: -1 }).limit(10).lean();
+
+    res.json({ user: { ...user.toObject() }, recentLogins, recentLeaves });
+  } catch (error) {
+    console.error('Get user activity error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -240,6 +264,56 @@ const accrueLeaves = async (req, res) => {
   } catch (error) {
     console.error('Accrue leaves error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// @desc    Export all users as CSV (stream)
+// @route   GET /api/users/export
+// @access  Private/Admin
+const exportUsersCSV = async (req, res) => {
+  try {
+    const query = {};
+    // you can add filtering options in the future (role, department, search, etc.)
+    res.setHeader('Content-Type', 'text/csv');
+    const filename = `users_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    // header
+    const headers = ['ID', 'First Name', 'Last Name', 'Email', 'Role', 'Department', 'Manager', 'Vacation', 'Sick', 'Casual', 'Created At'];
+    res.write(headers.map(h => `"${String(h).replace(/"/g, '""')}"`).join(',') + '\n');
+
+    // stream users via cursor for memory efficiency
+    const cursor = User.find(query).select('-password').lean().cursor();
+    for await (const u of cursor) {
+      let managerName = '-';
+      if (u.managerId) {
+        try {
+          const m = await User.findById(u.managerId).select('firstName lastName').lean();
+          if (m) managerName = `${m.firstName || ''} ${m.lastName || ''}`.trim();
+        } catch (err) {
+          // ignore manager lookup error and keep '-'
+        }
+      }
+      const row = [
+        u._id,
+        u.firstName || '',
+        u.lastName || '',
+        u.email || '',
+        u.role || '',
+        u.department || '-',
+        managerName || '-',
+        u.leaveBalance?.vacation || 0,
+        u.leaveBalance?.sick || 0,
+        u.leaveBalance?.casual || 0,
+        u.createdAt ? new Date(u.createdAt).toISOString() : ''
+      ];
+      res.write(row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\n');
+    }
+
+    return res.end();
+  } catch (error) {
+    console.error('Export users CSV error:', error);
+    res.status(500).json({ message: 'Failed to export users' });
   }
 };
 

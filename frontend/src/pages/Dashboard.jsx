@@ -86,7 +86,7 @@ const Dashboard = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back, {user?.firstName}! Here's your leave overview.</p>
         </div>
         <Button asChild>
@@ -97,7 +97,7 @@ const Dashboard = () => {
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {[...Array(5)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse glass-card">
               <CardHeader className="h-20 bg-muted/50" />
               <CardContent className="h-12 bg-muted/30" />
             </Card>
@@ -108,40 +108,45 @@ const Dashboard = () => {
           <StatCard
             title="Casual Balance"
             value={user?.leaveBalance?.casual || 0}
-            icon={<Coffee className="h-4 w-4 text-muted-foreground" />}
+            icon={<Coffee className="h-4 w-4" />}
+            color="blue"
           />
           <StatCard
             title="Sick Balance"
             value={user?.leaveBalance?.sick || 0}
-            icon={<Activity className="h-4 w-4 text-muted-foreground" />}
+            icon={<Activity className="h-4 w-4" />}
+            color="red"
           />
           <StatCard
             title="Vacation Balance"
             value={user?.leaveBalance?.vacation || 0}
-            icon={<Briefcase className="h-4 w-4 text-muted-foreground" />}
+            icon={<Briefcase className="h-4 w-4" />}
+            color="cyan"
           />
           <StatCard
             title="Pending Requests"
             value={pendingCount}
-            icon={<Clock className="h-4 w-4 text-yellow-500" />}
+            icon={<Clock className="h-4 w-4" />}
+            color="gray"
           />
           <StatCard
             title="Approved (Year)"
             value={approvedCount}
-            icon={<CheckCircle className="h-4 w-4 text-green-500" />}
+            icon={<CheckCircle className="h-4 w-4" />}
+            color="green"
           />
         </div>
       )}
 
       {/* Charts Section */}
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="shadow-sm">
+        <Card className="glass-card border-slate-700/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <PieChartIcon className="h-5 w-5 text-gray-500" />
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <PieChartIcon className="h-5 w-5 text-muted-foreground" />
               Leave Balance Distribution
             </CardTitle>
-            <CardDescription>Your remaining leave days by type.</CardDescription>
+            <CardDescription className="text-muted-foreground">Your remaining leave days by type.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {balanceData.length > 0 ? (
@@ -172,13 +177,13 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
+        <Card className="glass-card border-slate-700/50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChartIcon className="h-5 w-5 text-gray-500" />
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <BarChartIcon className="h-5 w-5 text-muted-foreground" />
               Leaves Taken (Monthly)
             </CardTitle>
-            <CardDescription>Approved leave days taken this year.</CardDescription>
+            <CardDescription className="text-muted-foreground">Approved leave days taken this year.</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {barChartData.length > 0 ? (
@@ -202,14 +207,14 @@ const Dashboard = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4 space-y-4">
-          <Card>
+          <Card className="glass-card border-slate-700/50">
             <CardHeader>
-              <CardTitle>Recent Leave Requests</CardTitle>
-              <CardDescription>
-                You have made {myLeaves.length} leave requests total.
+              <CardTitle className="text-foreground">Recent Leave Requests</CardTitle>
+                  <CardDescription className="text-muted-foreground">
+                    You have made {myLeaves.length} leave requests total.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+                <CardContent className="overflow-x-auto">
               <div className="space-y-8">
                 {recentLeaves.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No leave requests found.</p>
@@ -226,18 +231,18 @@ const Dashboard = () => {
                       </div>
                       <div className="ml-auto font-medium flex items-center gap-2">
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          leave.status === 'approved' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-                          leave.status === 'rejected' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' :
-                          leave.status === 'cancelled' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100' :
-                          'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
+                          leave.status === 'approved' ? 'bg-green-800/30 text-green-300' :
+                          leave.status === 'rejected' ? 'bg-red-800/30 text-red-300' :
+                          leave.status === 'cancelled' ? 'bg-muted/20 text-muted-foreground' :
+                          'bg-yellow-800/30 text-yellow-300'
                         }`}>
                           {leave.status}
                         </span>
                         {leave.status === 'pending' && (
-                          <Button 
+                            <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                            className="h-6 w-6 p-0 text-red-500 hover:text-red-300 hover:bg-red-900/10"
                             onClick={() => requestCancel(leave._id)}
                             title="Cancel Request"
                           >
@@ -256,10 +261,10 @@ const Dashboard = () => {
         <div className="col-span-3 space-y-4">
           <LeaveCalendar />
 
-          <Card>
+          <Card className="glass-card border-slate-700/50">
             <CardHeader>
-              <CardTitle>Upcoming Holidays</CardTitle>
-              <CardDescription>Next 3 holidays.</CardDescription>
+              <CardTitle className="text-foreground">Upcoming Holidays</CardTitle>
+                  <CardDescription className="text-muted-foreground">Next 3 holidays.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

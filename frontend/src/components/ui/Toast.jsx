@@ -29,8 +29,8 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`max-w-sm w-full rounded-lg border p-3 shadow-md flex items-start gap-3 bg-white ${
-              t.variant === 'error' ? 'border-red-200' : t.variant === 'success' ? 'border-green-200' : 'border-gray-200'
+            className={`max-w-sm w-full rounded-lg border p-3 shadow-md flex items-start gap-3 bg-card ${
+              t.variant === 'error' ? 'border-red-700/30' : t.variant === 'success' ? 'border-green-700/30' : 'border-slate-700/30'
             }`}
           >
             <div className="flex-1">

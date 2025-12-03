@@ -113,10 +113,10 @@ const ApplyLeave = () => {
         <form onSubmit={handleSubmit}>
           <CardContent>
             {error && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">{error}</div>
+              <div className="mb-4 p-3 bg-red-900/20 border border-red-700/30 text-red-300 rounded">{error}</div>
             )}
             {success && (
-              <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">{success}</div>
+              <div className="mb-4 p-3 bg-green-900/20 border border-green-700/30 text-green-300 rounded">{success}</div>
             )}
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
@@ -161,7 +161,7 @@ const ApplyLeave = () => {
                 <Label htmlFor="reason">Reason</Label>
                 <Textarea id="reason" placeholder="Enter a reason for your leave" value={reason} onChange={(e) => setReason(e.target.value)} />
               </div>
-              <div className="text-sm text-gray-500">You have selected {deductedDays} working days.</div>
+              <div className="text-sm text-muted-foreground">You have selected {deductedDays} working days.</div>
             </div>
           </CardContent>
           <CardFooter>

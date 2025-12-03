@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   },
   department: { type: String },
   managerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Who approves their leave?
+  lastLogin: { type: Date },
   leaveBalance: {
     sick: { type: Number, default: 10 },
     casual: { type: Number, default: 12 },
